@@ -269,7 +269,7 @@ sap.ui.define([
         // 3) Patch workflow task instance to COMPLETED (so inbox marks it done)
         if (this._taskInstanceID) {
           const wfBase = this._getWorkflowRuntimeBaseURL();
-          const ctx = await this._getTaskContext().catch(()=>({}));
+          const ctx = await this._getTaskContext().catch(() => ({}));
           // include approver decision in context
           ctx.approved = isApprove;
           ctx.approver = (newApproverComments[0] && newApproverComments[0].user) || "approver@dummy";
@@ -333,7 +333,17 @@ sap.ui.define([
         console.warn("Unable to fetch CSRF token", e);
         return "";
       }
+    },
+    onCloseDialog: function () {
+      if (this._detailDialog) {
+        this._detailDialog.close();
+      }
+    },
+
+    onDialogAfterClose: function () {
+      this._detailDialog = null;
     }
+
 
   });
 });

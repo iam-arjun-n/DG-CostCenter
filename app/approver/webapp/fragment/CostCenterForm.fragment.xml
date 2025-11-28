@@ -2,77 +2,129 @@
     xmlns:core="sap.ui.core"
     xmlns:f="sap.ui.layout.form"
     xmlns:l="sap.ui.layout">
-    
-    <Dialog id="CostCenterForm_Dialog" resizable="true" draggable="true" contentHeight="100%" contentWidth="100%" afterClose="onDialogAfterClose">
+
+    <Dialog id="CostCenterForm_Dialog"
+            resizable="true"
+            draggable="true"
+            contentHeight="100%"
+            contentWidth="100%"
+            afterClose="onDialogAfterClose">
+
         <content>
-            <IconTabBar id="CostCenterForm_IconTabBar" class="sapUiResponsiveContentPadding">
+            <IconTabBar id="CostCenterForm_IconTabBar"
+                        class="sapUiResponsiveContentPadding">
+
                 <items>
-                    <IconTabFilter id="Tab_Initial" text="Initial Screen" icon="sap-icon://add-contact" enabled="true">
-                        <f:SimpleForm id="SimpleForm_Initial" editable="true" layout="ResponsiveGridLayout"
-                                      labelSpanXL="4" labelSpanL="3" labelSpanM="12" labelSpanS="12"
-                                      adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
-                                      columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
+                    <IconTabFilter id="Tab_Initial"
+                                   text="Initial Screen"
+                                   icon="sap-icon://add-contact"
+                                   enabled="true">
+
+                        <f:SimpleForm id="SimpleForm_Initial"
+                                      editable="true"
+                                      layout="ResponsiveGridLayout"
+                                      labelSpanXL="4"
+                                      labelSpanL="3"
+                                      labelSpanM="12"
+                                      labelSpanS="12"
+                                      adjustLabelSpan="false"
+                                      emptySpanXL="0"
+                                      emptySpanL="0"
+                                      emptySpanM="0"
+                                      emptySpanS="0"
+                                      columnsXL="2"
+                                      columnsL="2"
+                                      columnsM="1">
+
                             <f:content>
-                                <Label id="Form_Label1" text="Controlling Area" labelFor="controllingArea"/>
-                                <Input id="controllingArea" required="true" value="{DataModel>/controllingArea}" editable="false"/>
 
-                                <Label id="Form_Label2" text="Cost Center" labelFor="costCenter"/>
-                                <Input id="costCenter" required="true" value="{DataModel>/costCenter}" editable="false"/>
+                                <Label id="CostCenterForm_Label1" text="Controlling Area"/>
+                                <Input id="CostCenterForm_Input" value="{line>/controllingArea}" editable="false"/>
 
-                                <Label id="Form_Label3" text="Valid From" labelFor="validFrom"/>
-                                <DatePicker id="validFrom" required="true" value="{DataModel>/validFrom}" valueFormat="yyyy-MM-dd" displayFormat="long" editable="false"/>
+                                <Label id="CostCenterForm_Label2" text="Cost Center"/>
+                                <Input id="CostCenterForm_Input1" value="{line>/costCenter}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label3" text="Valid From"/>
+                                <DatePicker id="CostCenterForm_DatePicker" value="{line>/validFrom}"
+                                            valueFormat="yyyy-MM-dd"
+                                            displayFormat="long"
+                                            editable="false" />
+
                             </f:content>
                         </f:SimpleForm>
+
                     </IconTabFilter>
 
-                    <!-- Basic Data Tab -->
-                    <IconTabFilter id="Tab_BasicData" text="Basic Data" icon="sap-icon://business-card" enabled="false">
-                        <f:SimpleForm id="SimpleForm_Basic" editable="true" layout="ResponsiveGridLayout" labelSpanXL="5" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
-                            <f:content >
-                            <core:Title id="_IDVendorTitle4"  />
-                                <Label id="Form_Label4" text="Name" labelFor="name"  />
-                                <Input id="name" value="{DataModel>/name}" editable="false"/>
+                    <IconTabFilter id="Tab_BasicData"
+                                   text="Basic Data"
+                                   icon="sap-icon://business-card"
+                                   enabled="true">
 
-                                <Label id="Form_Label5" text="Description" labelFor="description"  />
-                                <Input id="description" value="{DataModel>/description}" editable="false" />
-                                
-                                <Label id="Form_Label6" text="User Responsible" labelFor="userResponsible"  />
-                                <Input id="userResponsible" value="{DataModel>/userResponsible}"  editable="false"/>
-                                
-                                <Label id="Form_Label7" text="Person Responsible" labelFor="personResponsible"  />
-                                <Input id="personResponsible" required="true" value="{DataModel>/personResponsible}" editable="false" />
-                                
-                                <Label id="Form_Label8" text="Department" labelFor="department"  />
-                                <Input id="department" value="{DataModel>/department}" editable="false"/>
-                                
-                                <Label id="Form_Label9" text="Cost Center Category" labelFor="costCenterCategory"  />
-                                <Input id="costCenterCategory" required="true" value="{DataModel>/costCenterCategory}" editable="false"/>
-                                <core:Title id="_IDVendorTitle5"/>
-                                <Label id="Form_Label10" text="Hierarchy Area" labelFor="hierarchyArea"  />
-                                <Input id="hierarchyArea" required="true" value="{DataModel>/hierarchyArea}" editable="false"/>
-                                
-                                <Label id="Form_Label11" text="Company Code" labelFor="companyCode"  />
-                                <Input id="companyCode" required="true" value="{DataModel>/companyCode}" editable="false"/>
-                                
-                                <Label id="Form_Label12" text="Business Area" labelFor="businessArea"  />
-                                <Input id="businessArea" value="{DataModel>/businessArea}" editable="false"/>
-                                
-                                <Label id="Form_Label13" text="Currency" labelFor="currency"  />
-                                <Input id="currency" required="true" value="{DataModel>/currency}" editable="false"/>
-                                
-                                <Label id="Form_Label14" text="Profit Center" labelFor="profitCenter"  />
-                                <Input id="profitCenter" value="{DataModel>/profitCenter}" editable="false"/>
+                        <f:SimpleForm id="SimpleForm_Basic"
+                                      editable="true"
+                                      layout="ResponsiveGridLayout"
+                                      labelSpanXL="5"
+                                      labelSpanL="4"
+                                      labelSpanM="12"
+                                      labelSpanS="12"
+                                      columnsXL="2"
+                                      columnsL="2"
+                                      columnsM="1">
+
+                            <f:content>
+
+                                <core:Title id="CostCenterForm_Title" text="Basic Information"/>
+
+                                <Label id="CostCenterForm_Label4" text="Name"/>
+                                <Input id="CostCenterForm_Input2" value="{line>/name}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label5" text="Description"/>
+                                <Input id="CostCenterForm_Input3" value="{line>/description}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label6" text="User Responsible"/>
+                                <Input id="CostCenterForm_Input4" value="{line>/userResponsible}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label7" text="Person Responsible"/>
+                                <Input id="CostCenterForm_Input5" value="{line>/personResponsible}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label8" text="Department"/>
+                                <Input id="CostCenterForm_Input6" value="{line>/department}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label9" text="Cost Center Category"/>
+                                <Input id="CostCenterForm_Input7" value="{line>/costCenterCategory}" editable="false"/>
+
+                                <core:Title id="CostCenterForm_Title1" text="Organizational"/>
+
+                                <Label id="CostCenterForm_Label10" text="Hierarchy Area"/>
+                                <Input id="CostCenterForm_Input8" value="{line>/hierarchyArea}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label11" text="Company Code"/>
+                                <Input id="CostCenterForm_Input9" value="{line>/companyCode}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label12" text="Business Area"/>
+                                <Input id="CostCenterForm_Input10" value="{line>/businessArea}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label13" text="Currency"/>
+                                <Input id="CostCenterForm_Input11" value="{line>/currency}" editable="false"/>
+
+                                <Label id="CostCenterForm_Label14" text="Profit Center"/>
+                                <Input id="CostCenterForm_Input12" value="{line>/profitCenter}" editable="false"/>
+
                             </f:content>
+
                         </f:SimpleForm>
-                        
+
                     </IconTabFilter>
+
                 </items>
             </IconTabBar>
         </content>
 
         <buttons>
-            <Button id="Form_Button" text="Submit" type="Emphasized" press="onSubmitCostCenter"/>
-            <Button id="Form_Button1" text="Cancel" press="onCancelCostCenter"/>
+            <!-- Submit Removed -->
+            <Button id="CostCenterForm_Button" text="Close"
+                    press="onCloseDialog" />
         </buttons>
+
     </Dialog>
 </core:FragmentDefinition>
