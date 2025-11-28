@@ -146,7 +146,7 @@ sap.ui.define([
       if (!this._detailDialog) {
         // create simple fragment inline (you can move to separate file if desired)
         sap.ui.core.Fragment.load({
-          name: "com.deloitte.mdg.costcenter.approver.approver.fragment.ApprovalDetail",
+          name: "com.deloitte.mdg.costcenter.approver.approver.fragment.CostCenterForm",
           controller: this
         }).then(function (dlg) {
           that._detailDialog = dlg;
