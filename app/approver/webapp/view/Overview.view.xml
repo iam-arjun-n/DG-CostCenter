@@ -13,12 +13,12 @@
             >
                 <content>
                     <Panel
-                        id="Approval_Panel"
+                        id="Approval_Panel1"
                         expanded="true"
                         expandable="true"
                         width="auto"
                         class="sapUiResponsiveMargin"
-                        headerText="Cost Center - {}"
+                        headerText="Cost Center - {RequestType}"
                     >
                         <content>
                             <Table
@@ -29,34 +29,27 @@
                                 selectionChange="onSelectionChange"
                             >
                                 <columns>
-                                    <Column id="_IDGenColumn1">
-                                        <Label id="_IDGenLabel" text="Controlling Area" />
-                                    </Column>
-                                    <Column id="_IDGenColumn2">
-                                        <Label id="_IDGenLabel1" text="Cost Center" />
-                                    </Column>
-                                    <Column id="_IDGenColumn3">
-                                        <Label id="_IDGenLabel2" text="Name" />
-                                    </Column>
-                                    <Column id="_IDGenColumn4">
-                                        <Label id="_IDGenLabel3" text="Description" />
-                                    </Column>
+                                    <Column id="Approval_Column1"><Label id="Approval_Label" text="Controlling Area"/></Column>
+                                    <Column id="Approval_Column2"><Label id="Approval_Label1" text="Cost Center"/></Column>
+                                    <Column id="Approval_Column3"><Label id="Approval_Label2" text="Name"/></Column>
+                                    <Column id="Approval_Column4"><Label id="Approval_Label3" text="Description"/></Column>
                                 </columns>
 
                                 <items>
-                                    <ColumnListItem id="_IDGenColumnListItem">
+                                    <ColumnListItem id="Approval_ColumnListItem">
                                         <cells>
-                                            <Text id="_IDGenText" text="{controllingArea}" />
-                                            <Text id="_IDGenText1" text="{costCenter}" />
-                                            <Text id="_IDGenText2" text="{name}" />
-                                            <Text id="_IDGenText3" text="{description}" />
+                                            <Text id="Approval_Text" text="{controllingArea}" />
+                                            <Text id="Approval_Text1" text="{costCenter}" />
+                                            <Text id="Approval_Text2" text="{name}" />
+                                            <Text id="Approval_Text3" text="{description}" />
                                         </cells>
                                     </ColumnListItem>
                                 </items>
+
                                 <headerToolbar>
-                                    <OverflowToolbar id="_IDGenOverflowToolbar" width="100%">
+                                    <OverflowToolbar id="Approval_OverflowToolbar" width="100%">
                                         <content>
-                                            <ToolbarSpacer id="_IDGenToolbarSpacer" />
+                                            <ToolbarSpacer id="Approval_ToolbarSpacer" />
                                             <Button
                                                 id="Approval_Button_View"
                                                 text="View"
@@ -70,8 +63,8 @@
                             </Table>
                         </content>
                     </Panel>
-                    <Panel
-                        id="Approval_Panel1"
+
+                    <Panel id="Approval_Panel"
                         expanded="true"
                         expandable="true"
                         headerText="Comments"
@@ -91,8 +84,7 @@
                                 items="{commentModel>/}"
                                 id="flist"
                             >
-                                <FeedListItem
-                                    id="Approval_FeedListItem1"
+                                <FeedListItem id="Approval_FeedListItem"
                                     sender="{commentModel>UserName}"
                                     timestamp="{commentModel>Date}"
                                     text="{commentModel>Text}"
