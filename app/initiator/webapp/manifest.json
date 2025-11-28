@@ -107,6 +107,10 @@
       "type": "XML",
       "id": "App",
       "async": true
+    },
+    "sap.cloud": {
+      "public": true,
+      "service": "DG-CostCenter"
     }
   }
 }
