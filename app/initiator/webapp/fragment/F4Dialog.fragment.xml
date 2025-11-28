@@ -1,0 +1,28 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog id="F4Dialog" title="F4 Help" contentHeight="500px" contentWidth="400px">
+
+        <VBox>
+            <SearchField 
+                id="F4SearchField"
+                width="100%"
+                liveChange="onF4Search"
+                placeholder="Search..." />
+
+            <List
+                id="F4List"
+                items="{F4Model>/results}"
+                mode="SingleSelectMaster"
+                selectionChange="onF4Select">
+
+                <StandardListItem
+                    title="{F4Model>title}"
+                    description="{F4Model>description}" />
+            </List>
+        </VBox>
+
+        <beginButton>
+            <Button text="Cancel" press="onF4Cancel"/>
+        </beginButton>
+
+    </Dialog>
+</core:FragmentDefinition>
