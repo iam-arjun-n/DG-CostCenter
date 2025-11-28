@@ -15,6 +15,32 @@
       "version": "1.19.6",
       "toolsId": "d3d3d64e-21f1-4f3a-88dc-ef68b8bf39c5"
     },
+    "dataSources": {
+      "DatabaseService": {
+        "uri": "/odata/v4/cost-center/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      },
+      "SAPService": {
+        "uri": "/sap/opu/odata/sap/ZMATERIAL_MASTER_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "2.0"
+        }
+      },
+      "CostCenterAPI": {
+        "uri": "/sap/opu/odata/sap/API_COSTCENTER_SRV/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "annotations": []
+        }
+      }
+    },
     "crossNavigation": {
       "inbounds": {
         "costcenter_initiator-Display": {
@@ -64,6 +90,33 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
           "bundleName": "com.deloitte.mdg.costcenter.initiator.initiator.i18n.i18n"
+        }
+      },
+      "ServiceModel": {
+        "dataSource": "DatabaseService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "SAPModel": {
+        "dataSource": "SAPService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "CostCenterModel": {
+        "dataSource": "CostCenterAPI",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
         }
       }
     },
