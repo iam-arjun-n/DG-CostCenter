@@ -1,0 +1,94 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc"
+    xmlns:l="sap.ui.layout"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core" controllerName="com.deloitte.mdg.costcenter.initiator.initiator.controller.Submission" displayBlock="true">
+    <Page id="Submission_Page" floatingFooter="true" showNavButton="true" navButtonPress="nButtonPress">
+        <content>
+            <Panel id="Submission_Panel" expanded="true" expandable="true" headerText="Cost Center Data - {DraftModel>/requestType}" width="auto" 
+                class="sapUiResponsiveMargin">
+                <content>
+                    <Table noDataText="No Data. Use 'Upload' or 'Add new' for adding records" id="Submission_Table" alternateRowColors="false" mode="SingleSelectLeft" 
+                        updateFinished="onTableUpdateFinished" items="{DraftModel>/costCenterData}" selectionChange="onSelectionChange" >
+                        <columns>
+                            <Column id="Submission_Column_ControllingArea">
+                                <Text id="Submission_Text_ControllingArea" text="Controlling Area"/>
+                            </Column>
+                            <Column id="Submission_Column_CostCenter">
+                                <Text id="Submission_Text_CostCenter" text="Cost Center"/>
+                            </Column>
+                            <Column id="Submission_Column_Name">
+                                <Text id="Submission_Text_Name" text="Name"/>
+                            </Column>
+                            <Column id="Submission_Column_Description">
+                                <Text id="Submission_Text_Description" text="Description"/>
+                            </Column>
+                            <Column id="Submission_Column_UserResponsible">
+                                <Text id="Submission_Text_UserResponsible" text="User Responsible"/>
+                            </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem id="Submission_ColumnListItem">
+                                <cells>
+                                    <Text id="Submission_Cell_Text_ControllingArea" text="{DraftModel>controllingArea}" />
+                                    <Text id="Submission_Cell_Text_CostCenter" text="{DraftModel>costCenter}" />
+                                    <Text id="Submission_Cell_Text_Name" text="{DraftModel>name}" />
+                                    <Text id="Submission_Cell_Text_Description" text="{DraftModel>description}" />
+                                    <Text id="Submission_Cell_Text_UserResponsible" text="{DraftModel>userResponsible}" />
+                                </cells>
+                            </ColumnListItem>
+                        </items>
+                        <headerToolbar>
+                            <OverflowToolbar width="100%" id="Submission_Toolbar1">
+                                <content>
+                                    <OverflowToolbar id="Submission_Header1" width="100%">
+                                        <content>
+                                            <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_ileUploader" sameFilenameAllowed="true" 
+                                                iconOnly="false" buttonOnly="true" fileType="XLSX,xlsx" icon="sap-icon://upload" iconFirst="true" style="Emphasized" 
+                                                change="uploadFile" visible="false" />
+                                            <MenuButton id="Submission_Button_Export" text="Export/Download" buttonMode="Regular" icon="sap-icon://download" useDefaultActionOnly="true" type="Default">
+                                                <menu>
+                                                    <Menu id="Submission_Menu" itemSelected="onExportPress">
+                                                        <MenuItem id="Submission_MenuItem1" key="T" text="Download Template"/>
+                                                        <MenuItem id="Submission_MenuItem2" key="S" text="Export Entry"/>
+                                                    </Menu>
+                                                </menu>
+                                            </MenuButton>
+                                            <ToolbarSpacer id="Submission_Header2" />
+                                            <Button id="Submission_Button_View" text="View" icon="sap-icon://detail-view" press="viewCostCenter" enabled="false" />
+                                            <Button id="Submission_Button_ChangeLog" text="View Change logs" icon="sap-icon://notes" press="viewChangeLogs" enabled="false" />
+                                            <Button text="Edit" id="Submission_Button_Edit" icon="sap-icon://edit" press="editCostCenter" enabled="false"/>
+                                            <Button text="Add New" id="Submission_Button_Add" icon="sap-icon://add" press="addCostCenter" />
+                                            <Button text="Copy from Cost Center" id="Submission_Button_AddFromRef" icon="sap-icon://copy" press="copyFromExistingData"/>
+                                            <Button text="Delete" id="Submission_Button_Delete" icon="sap-icon://delete" press="deleteCostCenter" enabled="false"/>
+                                            <Button id="Submission_Button_ExportAtt" icon="sap-icon://excel-attachment" text="Export" press="onExport" visible="false" />
+                                        </content>
+                                    </OverflowToolbar>
+                                </content>
+                            </OverflowToolbar>
+                        </headerToolbar>
+                    </Table>
+                </content>
+            </Panel>
+            <Panel id="Submission_Panel_Comments" expanded="true" expandable="true" headerText="Comments" width="auto" class="sapUiResponsiveMargin">
+                <content>
+                    <!-- FeedInput posts to onPost (controller). The controller will add both UI and payload fields -->
+                    <FeedInput id="Submission_FeedInput" post="onPost" class="sapUiSmallMarginTopBottom" maxLength="500" placeholder="Add a comment - Character length limited to 500" icon="sap-icon://comment" rows="1"/>
+                    <List showSeparators="Inner" items="{commentModel>/}" id="Submission_list">
+                        <!-- view binds to UI-friendly properties -->
+                        <FeedListItem id="Submission_FeedListItem" sender="{commentModel>UserName}" timestamp="{commentModel>Date}" text="{commentModel>Text}"/>
+                    </List>
+                </content>
+            </Panel>
+        </content>
+        <footer>
+            <OverflowToolbar id="Submission_Toolbar2">
+                <Button id="Submission_Button_Message" icon="sap-icon://message-popup" press="handleMessagePopoverPress" text="{messageall>/messagesLength}" type="{= ${messageall>/messagesLength} > 0 ? 'Reject' : 'Default'}"/>
+                <ToolbarSpacer id="Submission_ToolbarSpacer" />
+                <Button text="Validate" id="Submission_Button_Validate" icon="sap-icon://validate" type="Ghost" press="checkForMandateFields" visible="false" />
+                  <Button text="Duplicate Check" id="Submission_Button_Duplicatecheck" press="MassDuplicateCheck" type="Emphasized"  />
+                <Button text="Send for Approval" id="Submission_Button_Send" icon="sap-icon://paper-plane" type="Accept" press="initiateApprovalProcess"/>
+                <content/>
+            </OverflowToolbar>
+        </footer>
+    </Page>
+</mvc:View>
