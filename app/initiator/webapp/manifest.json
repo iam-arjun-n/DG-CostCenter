@@ -146,12 +146,39 @@
           "target": [
             "TargetOverview"
           ]
+        },
+        {
+          "name": "RouteSubmission",
+          "pattern": "submission/{request_type}/:ca:/:cc:/:ve:",
+          "greedy": true,
+          "target": [
+            "TargetSubmission"
+          ]
+        },
+        {
+          "name": "RouteDisplay",
+          "pattern": "display",
+          "target": [
+            "TargetDisplay"
+          ]
         }
       ],
       "targets": {
         "TargetOverview": {
           "id": "Overview",
           "name": "Overview"
+        },
+        "TargetSubmission": {
+          "viewType": "XML",
+          "transition": "slide",
+          "viewId": "Submission",
+          "viewName": "Submission"
+        },
+        "TargetDisplay": {
+          "viewType": "XML",
+          "transition": "slide",
+          "viewId": "Display",
+          "viewName": "Display"
         }
       }
     },
