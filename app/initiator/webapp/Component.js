@@ -12,15 +12,53 @@ sap.ui.define([
             ]
         },
 
-        init() {
-            // call the base component's init function
+        currentUser: "",
+
+        init: async function () {
             UIComponent.prototype.init.apply(this, arguments);
 
-            // set the device model
             this.setModel(models.createDeviceModel(), "device");
-
-            // enable routing
             this.getRouter().initialize();
+
+            await this.loadUserInfo();
+        },
+
+        getBaseURL: function () {
+            const appId = this.getManifestEntry("/sap.app/id");
+            const appPath = appId.replaceAll(".", "/");
+            return jQuery.sap.getModulePath(appPath);
+        },
+
+        loadUserInfo: function () {
+            return new Promise((resolve) => {
+                const url = this.getBaseURL() + "/user-api/attributes";
+
+                const oUserModel = new JSONModel();
+                const mock = {
+                    firstname: "Dummy",
+                    lastname: "User",
+                    email: "dummy.user@com",
+                    name: "dummy.user@com",
+                    displayName: "Dummy User (dummy.user@com)"
+                };
+
+                oUserModel.loadData(url);
+                oUserModel.dataLoaded()
+                    .then(() => {
+                        if (!oUserModel.getData().email) {
+                            oUserModel.setData(mock);
+                        }
+                        this.setModel(oUserModel, "userInfo");
+                        this.currentUser = oUserModel.getData().email;
+                        resolve();
+                    })
+                    .catch(() => {
+                        oUserModel.setData(mock);
+                        this.setModel(oUserModel, "userInfo");
+                        this.currentUser = mock.email;
+                        resolve();
+                    });
+            });
         }
     });
 });
