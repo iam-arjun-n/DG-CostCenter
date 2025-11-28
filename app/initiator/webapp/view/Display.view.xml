@@ -1,0 +1,231 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fb="sap.ui.comp.filterbar"
+    controllerName="com.deloitte.mdg.costcenter.initiator.initiator.controller.Display"
+    displayBlock="true"
+    height="100%"
+>
+    <f:DynamicPage
+        id="dynamicPageId"
+        headerExpanded="true"
+        backgroundDesign="List"
+    >
+        <f:title>
+            <f:DynamicPageTitle
+                id="Display_DynamicPage"
+                backgroundDesign="Transparent"
+            >
+            <f:actions>
+            <Button id="Display_Nav_Back"
+                icon="sap-icon://nav-back"
+                type="Transparent"
+                press="onNavBack"
+            />
+        </f:actions>
+                <f:heading>
+                    <Title
+                        id="Display_Title"
+                        text="Cost Centers"
+                    />
+                </f:heading>
+                
+            </f:DynamicPageTitle>
+        </f:title>
+
+        <f:header>
+            <f:DynamicPageHeader
+                id="Display_DynamicPageHeader1"
+                pinnable="true"
+                backgroundDesign="Transparent"
+            >
+                <f:content>
+                    <fb:FilterBar
+                        id="filterbar"
+                        reset="onClearFilter"
+                        clear="onClearFilter"
+                        search="onGoFilter"
+                        showFilterConfiguration="false"
+                        useToolbar="false"
+                        showGoOnFB="true"
+                        showClearOnFB="true"
+                    >
+                        <fb:filterGroupItems>
+                            <fb:FilterGroupItem
+                                id="Display_Filter_CostCenter"
+                                groupName="SearchBar"
+                                name="Cost Center"
+                                label="Cost Center"
+                                visibleInFilterBar="true"
+                                labelTooltip="Cost center"
+                            >
+                                <fb:control>
+                                    <MultiInput
+                                        id="MultiInput_CostCenter"
+                                        name="Cost center"
+                                        showValueHelp="true"
+                                        valueHelpRequest="onValueHelpRequest"
+                                    />
+                                </fb:control>
+                            </fb:FilterGroupItem>
+
+                            <fb:FilterGroupItem
+                                id="Display_Filter_Name"
+                                groupName="SearchBar"
+                                name="Name"
+                                label="Name"
+                                visibleInFilterBar="true"
+                                labelTooltip="Name"
+                            >
+                                <fb:control>
+                                    <MultiInput
+                                        id="MultiInput_Name"
+                                        name="Name"
+                                        showValueHelp="true"
+                                        valueHelpRequest="onValueHelpRequest"
+                                    />
+                                </fb:control>
+                            </fb:FilterGroupItem>
+
+                            <fb:FilterGroupItem
+                                id="Display_Filter_Description"
+                                groupName="SearchBar"
+                                name="Description"
+                                label="Description"
+                                visibleInFilterBar="true"
+                                labelTooltip="Description"
+                            >
+                                <fb:control>
+                                    <MultiInput
+                                        id="MultiInput_Description"
+                                        name=" Description"
+                                        showValueHelp="true"
+                                        valueHelpRequest="onValueHelpRequest"
+                                    />
+                                </fb:control>
+                            </fb:FilterGroupItem>
+
+                            <fb:FilterGroupItem
+                                id="Display_Filter_PersonResponsible"
+                                groupName="SearchBar"
+                                name="Person Responsible"
+                                label="Person Responsible"
+                                visibleInFilterBar="true"
+                                labelTooltip="Person Responsible"
+                            >
+                                <fb:control>
+                                    <MultiInput
+                                        id="MultiInput_PersonResponsible"
+                                        name="Person Responsible"
+                                        showValueHelp="true"
+                                        valueHelpRequest="onValueHelpRequest"
+                                    />
+                                </fb:control>
+                            </fb:FilterGroupItem>
+                        </fb:filterGroupItems>
+                    </fb:FilterBar>
+                </f:content>
+            </f:DynamicPageHeader>
+        </f:header>
+
+        <f:content>
+            <Table
+                id="Display_Table"
+                items="{
+    path: 'CostCenterModel>/A_CostCenter',
+    parameters: {
+        $expand: 'to_Text',
+        $select: 'ControllingArea,CostCenter,ValidityEndDate,CostCtrResponsiblePersonName,to_Text/CostCenterName,to_Text/CostCenterDescription'
+    }
+}"
+                growing="true"
+                growingThreshold="20"
+                mode="SingleSelectLeft"
+                selectionChange="onItemSelected"
+                visible="true"
+                sticky="ColumnHeaders,HeaderToolbar,InfoToolbar"
+            >
+                <headerToolbar>
+                    <OverflowToolbar id="Display_OverflowToolbar">
+                        <content>
+                            <Title
+                                id="Display_Table_Title"
+                                text="Cost Centers"
+                            />
+                            <ToolbarSpacer id="Display_ToolbarSpacer" />
+                            <Button
+                                id="Button_Change"
+                                text="Change"
+                                press="onChangePress"
+                                enabled="true"
+                            />
+                            <Button
+                                id="Button_Extend"
+                                text="Extend"
+                                press="onExtendPress"
+                                enabled="true"
+                            />
+                        </content>
+                    </OverflowToolbar>
+                </headerToolbar>
+
+                <columns>
+                    <Column id="Col_Costcenter">
+                        <Text
+                            id="Text_Costcenter"
+                            text="Cost center"
+                        />
+                    </Column>
+
+                    <Column id="Col_Name">
+                        <Text
+                            id="Text_Name"
+                            text="Name"
+                        />
+                    </Column>
+
+                    <Column id="Col_Description">
+                        <Text
+                            id="Text_Description"
+                            text="Description"
+                        />
+                    </Column>
+
+                    <Column id="Col_PersonResponsible">
+                        <Text
+                            id="Text_PersonResponsible"
+                            text="Person Responsible"
+                        />
+                    </Column>
+                </columns>
+
+                <items>
+                    <ColumnListItem id="Display_ColumnListItem">
+                        <cells>
+                            <ObjectIdentifier
+                                id="Cell_Costcenter"
+                                title="{CostCenterModel>CostCenter}"
+                            />
+
+                            <Text
+                                id="Cell_Name"
+                                text="{CostCenterModel>CostCenterName}"
+                            />
+
+                            <Text
+                                id="Cell_Description"
+                                text="{CostCenterModel>CostCenterDescription}"
+                            />
+
+                            <Text
+                                id="Cell_PersonResponsible"
+                                text="{CostCenterModel>CostCtrResponsiblePersonName}"
+                            />
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>
