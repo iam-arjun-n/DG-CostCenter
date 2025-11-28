@@ -463,8 +463,10 @@ sap.ui.define([
                     }))
                 };
 
-                let created = await oModel.bindList("/CostCenterRequests").create(payload);
-                let reqId = created.requestId;
+                let listBinding = oModel.bindList("/CostCenterRequests");
+                let context = await listBinding.create(payload);
+                await context.created(); 
+                let reqId = context.getProperty("requestId");
                 let response = await fetch(
                     this._getWorkflowBaseURL() + "/workflow-instances",
                     {
@@ -552,13 +554,11 @@ sap.ui.define([
             var otherFields = this._getOtherFieldIds();
             var that = this;
 
-            // CREATE: all fields editable
             if (sType === "Create") {
                 this._setAllDialogFieldsEditable(true);
                 return;
             }
 
-            // CHANGE: initial tab readonly, rest editable
             if (sType === "Change") {
                 initialFields.forEach(function (id) {
                     var ctrl = that.byId(id);
@@ -575,7 +575,6 @@ sap.ui.define([
                 return;
             }
 
-            // EXTEND: SAP–prefilled fields readonly, empty fields editable
             if (sType === "Extend") {
                 if (!this._CostCenterForm) {
                     return;
@@ -583,7 +582,6 @@ sap.ui.define([
                 var oModel = this._CostCenterForm.getModel("DataModel");
                 var oData = (oModel && oModel.getData()) || {};
 
-                // Always readonly for these three in Extend
                 initialFields.forEach(function (id) {
                     var ctrl = that.byId(id);
                     if (ctrl && ctrl.setEditable) {

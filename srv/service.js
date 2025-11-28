@@ -23,8 +23,8 @@ class CostCenterService extends cds.ApplicationService {
         const padded = next.toString().padStart(7, "0");  // 0000001
 
         req.data.requestId = "CCTR" + padded;
-        req.data.requestStatus = "Draft";
-        req.data.workflowStatus = "NotStarted";
+        req.data.requestStatus = "Submitted";
+        req.data.workflowStatus = "In Approval";
 
       } catch (err) {
         console.error("Error generating requestId:", err);
