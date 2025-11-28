@@ -3,6 +3,20 @@
   "authenticationMethod": "route",
   "routes": [
     {
+      "source": "^/bpmworkflowruntime/v2/(.*)$",
+      "target": "/public/rule/runtime/rest/v2/$1",
+      "destination": "BPA",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/bpmworkflowruntime/v1/(.*)$",
+      "target": "/public/workflow/rest/v1/$1",
+      "destination": "BPA",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    },
+    {
       "source": "^/resources/(.*)$",
       "target": "/resources/$1",
       "authenticationType": "none",
@@ -13,6 +27,27 @@
       "target": "/test-resources/$1",
       "authenticationType": "none",
       "destination": "ui5"
+    },
+    {
+      "source": "^/odata/v4/cost-center/(.*)$",
+      "target": "/odata/v4/cost-center/$1",
+      "destination": "costcenter-service-dest-api",
+      "csrfProtection": true,
+      "authenticationType": "xsuaa"
+    },
+    {
+      "source": "^/sap/(.*)$",
+      "target": "/sap/$1",
+      "destination": "DIM",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
+    }, 
+    {
+      "source": "^/odata/(.*)$",
+      "target": "/odata/$1",
+      "destination": "DIM",
+      "authenticationType": "xsuaa",
+      "csrfProtection": false
     },
     {
       "source": "^(.*)$",
