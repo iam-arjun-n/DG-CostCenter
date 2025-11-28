@@ -1,6 +1,107 @@
-<mvc:View controllerName="com.deloitte.mdg.costcenter.approver.approver.controller.Overview"
+<mvc:View
+    controllerName="com.deloitte.mdg.costcenter.approver.approver.controller.Overview"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns="sap.m">
-    <Page id="page" title="{i18n>title}">
-    </Page>
+    displayBlock="true"
+    xmlns="sap.m"
+>
+    <App id="Approval_App">
+        <pages>
+            <Page
+                id="Approval_Page"
+                showHeader="false"
+                showFooter="false"
+            >
+                <content>
+                    <Panel
+                        id="Approval_Panel"
+                        expanded="true"
+                        expandable="true"
+                        width="auto"
+                        class="sapUiResponsiveMargin"
+                        headerText="Cost Center - {}"
+                    >
+                        <content>
+                            <Table
+                                id="Approval_CostCenterTable"
+                                alternateRowColors="false"
+                                mode="SingleSelectLeft"
+                                items="{/costCenterData}"
+                                selectionChange="onSelectionChange"
+                            >
+                                <columns>
+                                    <Column id="_IDGenColumn1">
+                                        <Label id="_IDGenLabel" text="Controlling Area" />
+                                    </Column>
+                                    <Column id="_IDGenColumn2">
+                                        <Label id="_IDGenLabel1" text="Cost Center" />
+                                    </Column>
+                                    <Column id="_IDGenColumn3">
+                                        <Label id="_IDGenLabel2" text="Name" />
+                                    </Column>
+                                    <Column id="_IDGenColumn4">
+                                        <Label id="_IDGenLabel3" text="Description" />
+                                    </Column>
+                                </columns>
+
+                                <items>
+                                    <ColumnListItem id="_IDGenColumnListItem">
+                                        <cells>
+                                            <Text id="_IDGenText" text="{controllingArea}" />
+                                            <Text id="_IDGenText1" text="{costCenter}" />
+                                            <Text id="_IDGenText2" text="{name}" />
+                                            <Text id="_IDGenText3" text="{description}" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                                <headerToolbar>
+                                    <OverflowToolbar id="_IDGenOverflowToolbar" width="100%">
+                                        <content>
+                                            <ToolbarSpacer id="_IDGenToolbarSpacer" />
+                                            <Button
+                                                id="Approval_Button_View"
+                                                text="View"
+                                                icon="sap-icon://detail-view"
+                                                press="onViewLine"
+                                                enabled="false"
+                                            />
+                                        </content>
+                                    </OverflowToolbar>
+                                </headerToolbar>
+                            </Table>
+                        </content>
+                    </Panel>
+                    <Panel
+                        id="Approval_Panel1"
+                        expanded="true"
+                        expandable="true"
+                        headerText="Comments"
+                        width="auto"
+                        class="sapUiResponsiveMargin"
+                    >
+                        <content>
+                            <FeedInput
+                                id="fIC"
+                                post="onPostComment"
+                                class="sapUiSmallMarginTopBottom"
+                                maxLength="100"
+                                placeholder="Add a comment - Character length limited to 100"
+                            />
+                            <List
+                                showSeparators="Inner"
+                                items="{commentModel>/}"
+                                id="flist"
+                            >
+                                <FeedListItem
+                                    id="Approval_FeedListItem1"
+                                    sender="{commentModel>UserName}"
+                                    timestamp="{commentModel>Date}"
+                                    text="{commentModel>Text}"
+                                />
+                            </List>
+                        </content>
+                    </Panel>
+                </content>
+            </Page>
+        </pages>
+    </App>
 </mvc:View>
