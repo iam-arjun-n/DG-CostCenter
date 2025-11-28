@@ -23,7 +23,17 @@
   "private": true,
   "cds": {
     "requires": {
+      "db": {
+        "kind": "sqlite",
+        "model": [
+          "db",
+          "srv"
+        ]
+      },
       "[production]": {
+        "db": {
+          "kind": "hana"
+        },
         "auth": "xsuaa"
       },
       "connectivity": true,
