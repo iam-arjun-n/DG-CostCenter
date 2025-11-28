@@ -140,7 +140,7 @@
 			"priority": "MEDIUM",
 			"isHiddenInLogForParticipant": false,
 			"supportsForward": false,
-			"userInterface": "sapui5://comdeloittemdgcostcenterapproverapprover/com.deloitte.mdg.costcenter.approver.approver",
+			"userInterface": "sapui5://8753c3e6-0194-44ff-bcbf-1ccdd360325f.DG-CostCenter.comdeloittemdgcostcenterapproverapprover/com.deloitte.mdg.costcenter.approver.approver",
 			"recipientGroups": "CostCenterApproval",
 			"id": "usertask1",
 			"name": "Approval"

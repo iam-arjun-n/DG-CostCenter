@@ -1,8 +1,9 @@
 sap.ui.define([
     "sap/ui/core/UIComponent",
     "sap/ui/model/json/JSONModel",
-    "com/deloitte/mdg/costcenter/approver/approver/model/models"
-], (UIComponent, JSONModel, models) => {
+    "com/deloitte/mdg/costcenter/approver/approver/model/models",
+    "sap/m/MessageBox"
+], (UIComponent, JSONModel, models, MessageBox) => {
     "use strict";
 
     return UIComponent.extend("com.deloitte.mdg.costcenter.approver.approver.Component", {
@@ -11,6 +12,14 @@ sap.ui.define([
             interfaces: [
                 "sap.ui.core.IAsyncContentCreation"
             ]
+        },
+        createContent: function () {
+            this._mainView = sap.ui.view({
+                id: "taskView",
+                viewName: "com.deloitte.mdg.costcenter.approver.approver.view.Overview",
+                type: "XML"
+            });
+            return this._mainView;
         },
 
         init: function () {
@@ -47,8 +56,7 @@ sap.ui.define([
         },
 
         _getApprovalView: function () {
-            const root = this.getRouter().getTarget("TargetApproval")._oOptions?.view;
-            return root;
+            return this._mainView;
         },
 
         _onApprove: async function () {
