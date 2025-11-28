@@ -474,7 +474,7 @@ sap.ui.define([
                             "X-CSRF-Token": this._fetchCSRFToken()
                         },
                         body: JSON.stringify({
-                            definitionId: "costcenterworkflow",
+                            definitionId: "com.deloitte.mdg.costcenter.workflow.costcenterapprovalprocess",
                             context: { ReqId: reqId }
                         })
                     }

@@ -3,170 +3,212 @@ ID: DG-CostCenter
 description: A simple CAP project.
 version: 1.0.0
 modules:
-- name: DG-CostCenter-srv
-  type: nodejs
-  path: gen/srv
-  requires:
+  - name: DG-CostCenter-srv
+    type: nodejs
+    path: gen/srv
+    requires:
+      - name: DG-CostCenter-auth
+      - name: DG-CostCenter-db
+      - name: DG-CostCenter-connectivity
+      - name: DG-CostCenter-destination
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    parameters:
+      buildpack: nodejs_buildpack
+      instances: 1
+      memory: 256M
+    build-parameters:
+      builder: npm-ci
+
+  - name: DG-CostCenter-db-deployer
+    type: hdb
+    path: gen/db
+    requires:
+      - name: DG-CostCenter-db
+    parameters:
+      buildpack: nodejs_buildpack
+
+  - name: DG-CostCenter
+    type: approuter.nodejs
+    path: app/router
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          name: srv-api
+          url: ~{srv-url}
+      - name: DG-CostCenter-auth
+      - name: DG-CostCenter-destination
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+    parameters:
+      disk-quota: 256M
+      keep-existing-routes: false
+      memory: 256M
+      routes:
+        - route: dg-costcenter-dev.cfapps.eu10-004.hana.ondemand.com
+
+  - name: DG-CostCenter-app-deployer
+    type: com.sap.application.content
+    path: gen
+    requires:
+      - name: DG-CostCenter-auth
+      - name: srv-api
+      - name: DG-CostCenter-html5-repo-host
+        parameters:
+          config:
+            HTML5Runtime_enabled: true
+          content-target: true
+    build-parameters:
+      build-result: app/
+      requires:
+        - artifacts:
+            - comdeloittemdgcostcenterinitiatorinitiator.zip
+          name: comdeloittemdgcostcenterinitiatorinitiator
+          target-path: app/
+        - artifacts:
+            - comdeloittemdgcostcenterapproverapprover.zip
+          name: comdeloittemdgcostcenterapproverapprover
+          target-path: app/
+
+  - name: comdeloittemdgcostcenterinitiatorinitiator
+    type: html5
+    path: app/initiator
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: comdeloittemdgcostcenterapproverapprover
+    type: html5
+    path: app/approver
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:cf
+      supported-platforms: []
+
+  - name: workflow
+    type: com.sap.application.content
+    path: workflow
+    requires:
+      - name: sap_processautomation
+        parameters:
+          content-target: true
+          service-key:
+            config:
+              deployUsageScenario: workflow
+            name: spa-workflow-service-key
+  - name: DG-CostCenter-destination-content
+    type: com.sap.application.content
+    requires:
+      - name: DG-CostCenter-destination
+        parameters:
+          content-target: true
+      - name: DG-CostCenter-html5-repo-host
+        parameters:
+          service-key:
+            name: DG-CostCenter-html5-repo-host-key
+      - name: DG-CostCenter-auth
+        parameters:
+          service-key:
+            name: DG-CostCenter-auth-key
+    parameters:
+      content:
+        instance:
+          destinations:
+            - Name: DG_CostCenter_repo_host
+              ServiceInstanceName: DG-CostCenter-html5-repo-host
+              ServiceKeyName: DG-CostCenter-html5-repo-host-key
+              sap.cloud.service: DG-CostCenter
+            - Authentication: OAuth2UserTokenExchange
+              Name: DG_CostCenter_xsuaa
+              ServiceInstanceName: DG-CostCenter-auth
+              ServiceKeyName: DG-CostCenter-auth-key
+              sap.cloud.service: DG-CostCenter
+          existing_destinations_policy: ignore
+    build-parameters:
+      no-source: true
+
+resources:
   - name: DG-CostCenter-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      config:
+        oauth2-configuration:
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+        tenant-mode: dedicated
+        xsappname: dg-costcenter
+      path: ./xs-security.json
+      service: xsuaa
+      service-plan: application
+      service-key:
+        name: DG-CostCenter-auth-key
+    requires:
+      - name: app-api
+
   - name: DG-CostCenter-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
   - name: DG-CostCenter-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+
   - name: DG-CostCenter-destination
-  provides:
-  - name: srv-api
-    properties:
-      srv-url: ${default-url}
-  parameters:
-    buildpack: nodejs_buildpack
-    instances: 1
-    memory: 256M
-  build-parameters:
-    builder: npm-ci
-- name: DG-CostCenter-db-deployer
-  type: hdb
-  path: gen/db
-  requires:
-  - name: DG-CostCenter-db
-  parameters:
-    buildpack: nodejs_buildpack
-- name: DG-CostCenter
-  type: approuter.nodejs
-  path: app/router
-  requires:
-  - name: srv-api
-    group: destinations
-    properties:
-      forwardAuthToken: true
-      name: srv-api
-      url: ~{srv-url}
-  - name: DG-CostCenter-auth
-  - name: DG-CostCenter-destination
-  - name: DG-CostCenter-html5-runtime
-  provides:
-  - name: app-api
-    properties:
-      app-protocol: ${protocol}
-      app-uri: ${default-uri}
-  parameters:
-    disk-quota: 256M
-    keep-existing-routes: false
-    memory: 256M
-    routes:
-      - route: dg-costcenter-dev.cfapps.eu10-004.hana.ondemand.com
-- name: DG-CostCenter-app-deployer
-  type: com.sap.application.content
-  path: gen
-  requires:
-  - name: DG-CostCenter-auth
-  - name: srv-api
-  - name: DG-CostCenter-html5-repo-host
+    type: org.cloudfoundry.managed-service
     parameters:
       config:
         HTML5Runtime_enabled: true
-      content-target: true
-  build-parameters:
-    build-result: app/
-    requires:
-    - artifacts:
-      - comdeloittemdgcostcenterinitiatorinitiator.zip
-      name: comdeloittemdgcostcenterinitiatorinitiator
-      target-path: app/
-    - artifacts:
-      - comdeloittemdgcostcenterapproverapprover.zip
-      name: comdeloittemdgcostcenterapproverapprover
-      target-path: app/
-- name: comdeloittemdgcostcenterinitiatorinitiator
-  type: html5
-  path: app/initiator
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
-- name: comdeloittemdgcostcenterapproverapprover
-  type: html5
-  path: app/approver
-  build-parameters:
-    build-result: dist
-    builder: custom
-    commands:
-    - npm install
-    - npm run build:cf
-    supported-platforms: []
-- name: workflow
-  type: com.sap.application.content
-  path: workflow
-  requires:
-  - name: sap_processautomation
+        init_data:
+          instance:
+            destinations:
+              - Authentication: NoAuthentication
+                Name: ui5
+                ProxyType: Internet
+                Type: HTTP
+                URL: https://ui5.sap.com
+            existing_destinations_policy: update
+      service: destination
+      service-plan: lite
+
+  - name: DG-CostCenter-html5-repo-host
+    type: org.cloudfoundry.managed-service
     parameters:
-      content-target: true
+      service: html5-apps-repo
+      service-plan: app-host
       service-key:
-        config:
-          deployUsageScenario: workflow
-        name: spa-workflow-service-key
-resources:
-- name: DG-CostCenter-auth
-  type: org.cloudfoundry.managed-service
-  parameters:
-    config:
-      oauth2-configuration:
-        redirect-uris:
-        - https://*~{app-api/app-uri}/**
-      tenant-mode: dedicated
-      xsappname: dg-costcenter
-    path: ./xs-security.json
-    service: xsuaa
-    service-plan: application
-  requires:
-  - name: app-api
-- name: DG-CostCenter-db
-  type: com.sap.xs.hdi-container
-  parameters:
-    service: hana
-    service-plan: hdi-shared
-- name: DG-CostCenter-connectivity
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: connectivity
-    service-plan: lite
-- name: DG-CostCenter-destination
-  type: org.cloudfoundry.managed-service
-  parameters:
-    config:
-      HTML5Runtime_enabled: true
-      init_data:
-        instance:
-          destinations:
-          - Authentication: NoAuthentication
-            Name: ui5
-            ProxyType: Internet
-            Type: HTTP
-            URL: https://ui5.sap.com
-          existing_destinations_policy: update
-    service: destination
-    service-plan: lite
-- name: DG-CostCenter-html5-repo-host
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: html5-apps-repo
-    service-plan: app-host
-- name: DG-CostCenter-html5-runtime
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: html5-apps-repo
-    service-plan: app-runtime
-- name: sap_processautomation
-  type: org.cloudfoundry.managed-service
-  parameters:
-    service: process-automation-service
-    service-plan: standard
+        name: DG-CostCenter-html5-repo-host-key
+
+  - name: sap_processautomation
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: process-automation-service
+      service-plan: standard
+
 parameters:
   deploy_mode: html5-repo
   enable-parallel-deployments: true
+
 build-parameters:
   before-all:
-  - builder: custom
-    commands:
-    - npm ci
-    - npx cds build --production
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production

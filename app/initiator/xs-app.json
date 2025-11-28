@@ -31,7 +31,7 @@
     {
       "source": "^/odata/v4/cost-center/(.*)$",
       "target": "/odata/v4/cost-center/$1",
-      "destination": "costcenter-service-dest-api",
+      "destination": "CostCenter-SRV",
       "csrfProtection": true,
       "authenticationType": "xsuaa"
     },

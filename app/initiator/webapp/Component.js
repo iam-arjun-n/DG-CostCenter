@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/core/UIComponent",
-    "com/deloitte/mdg/costcenter/initiator/initiator/model/models"
-], (UIComponent, models) => {
+    "com/deloitte/mdg/costcenter/initiator/initiator/model/models",
+    "sap/ui/model/json/JSONModel"
+], (UIComponent, models, JSONModel) => {
     "use strict";
 
     return UIComponent.extend("com.deloitte.mdg.costcenter.initiator.initiator.Component", {

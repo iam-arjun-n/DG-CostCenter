@@ -12,7 +12,7 @@ class CostCenterService extends cds.ApplicationService {
     this.before("CREATE", CostCenterRequests, async (req) => {
       try {
 
-        const hanaTable = "COM_DELOITTE_MDG_COST_CENTER_COSTCENTERREQUESTS";
+        const hanaTable = "COM_DELOITTE_MDG_COSTCENTER_COSTCENTERREQUESTS";
 
         const seq = new SequenceHelper({
           db,
