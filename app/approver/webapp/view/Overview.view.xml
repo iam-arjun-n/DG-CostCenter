@@ -18,7 +18,7 @@
                         expandable="true"
                         width="auto"
                         class="sapUiResponsiveMargin"
-                        headerText="Cost Center - {RequestType}"
+                        headerText="Cost Center - {/RequestType}"
                     >
                         <content>
                             <Table

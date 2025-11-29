@@ -155,11 +155,46 @@ sap.ui.define([
                 return;
             }
 
-            await this._updateStatus("Approved", "Completed");
-            await this._saveNewComments(comments);
+            try {
+                const mainModel = view.getModel();
+                const lineData = mainModel.getData().costCenterData?.[0];
 
-            MessageBox.success("Request approved.");
-            this._refreshInbox();
+                // --- POST to S/4 using BATCH ---
+                const csrf = await this._fetchS4Csrf();
+                const s4Base = this.getManifestEntry("/sap.app/dataSources/CostCenterAPI/uri");
+
+                const batchInfo = this._buildCreateCostCenterBatch(lineData);
+
+                const s4Resp = await fetch(s4Base + "$batch", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": `multipart/mixed;boundary=${batchInfo.boundary}`,
+                        "X-CSRF-Token": csrf
+                    },
+                    body: batchInfo.payload
+                });
+
+                if (!s4Resp.ok) {
+                    const errText = await s4Resp.text();
+                    throw new Error("S/4 Batch Create Failed: " + errText);
+                }
+
+                // --- Update CAP Request ---
+                await this._updateStatus("Approved", "Completed");
+
+                // --- Save Comments ---
+                await this._saveNewComments(comments);
+
+                // --- Complete WF ---
+                await this._completeWorkflowTask();
+
+                MessageBox.success("Request approved.");
+                this._refreshInbox();
+
+            } catch (e) {
+                MessageBox.error(e.message);
+            }
         },
 
         _onReject: async function () {
@@ -171,11 +206,17 @@ sap.ui.define([
                 return;
             }
 
-            await this._updateStatus("Rejected", "Rejected");
-            await this._saveNewComments(comments);
+            try {
+                await this._updateStatus("Rejected", "Rejected");
+                await this._saveNewComments(comments);
+                await this._completeWorkflowTask();
 
-            MessageBox.error("Request rejected.");
-            this._refreshInbox();
+                MessageBox.error("Request rejected.");
+                this._refreshInbox();
+
+            } catch (e) {
+                MessageBox.error(e.message);
+            }
         },
 
         _hasNewComment: function (comments) {
@@ -228,6 +269,63 @@ sap.ui.define([
                 "NA",
                 startup.taskModel.getData().InstanceID
             );
+        },
+        _fetchS4Csrf: async function () {
+            const s4Base = this.getManifestEntry("/sap.app/dataSources/CostCenterAPI/uri");
+
+            const res = await fetch(s4Base, {
+                method: "GET",
+                headers: { "X-CSRF-Token": "Fetch" },
+                credentials: "include"
+            });
+
+            return res.headers.get("X-CSRF-Token");
+        },
+        _buildCreateCostCenterBatch: function (lineData) {
+
+            const boundary = "batch_" + Date.now();
+
+            const payload =
+                `--${boundary}
+Content-Type: application/http
+Content-Transfer-Encoding: binary
+
+POST CostCenterSet HTTP/1.1
+Content-Type: application/json
+
+${JSON.stringify({
+                    ControllingArea: lineData.controllingArea,
+                    CostCenter: lineData.costCenter,
+                    CostCenterName: lineData.name,
+                    CostCenterType: "1",
+                    ValidFromDate: lineData.validFrom,
+                    ResponsibleUser: lineData.userResponsible,
+                    CompanyCode: lineData.companyCode,
+                    ProfitCenter: lineData.profitCenter
+                })}
+--${boundary}--`;
+
+            return { boundary, payload };
+        },
+        _completeWorkflowTask: async function () {
+            const base = this._getWorkflowBaseURL();
+            const taskId = this.getModel("task").getData().InstanceID;
+
+            const res = await fetch(`${base}/task-instances/${taskId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    status: "COMPLETED"
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error("Workflow task completion failed");
+            }
         }
+
+
+
     });
 });
