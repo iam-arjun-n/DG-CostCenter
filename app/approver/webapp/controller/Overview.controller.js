@@ -161,29 +161,20 @@ sap.ui.define([
     },
 
     onPostComment: function (oEvent) {
-      var sValue = oEvent.getParameter("value");
-      if (!sValue || !sValue.trim()) {
+      var text = oEvent.getParameter("value");
+      if (!text || !text.trim()) {
         MessageToast.show("Comment cannot be empty.");
         return;
       }
-      // get current user (best-effort)
-      var user = (sap.ushell && sap.ushell.Container && sap.ushell.Container.getUser) ? sap.ushell.Container.getUser().getEmail() : "approver@dummy";
 
-      var comment = {
-        ID: null,
-        commentText: sValue,
-        createdAt: new Date().toISOString(),
-        user: user,
-        role: "Approver"
-      };
+      var user = (sap.ushell?.Container?.getUser?.())
+        ? sap.ushell.Container.getUser().getEmail()
+        : "approver@dummy";
 
-      // push to UI list
-      var root = this.getView().getModel();
-      var a = root.getProperty("/comments") || [];
-      a.unshift(comment);
-      root.setProperty("/comments", a);
+      // Use component method to add comment
+      this.getOwnerComponent().addApproverCommentToModels(text, user);
 
-      // also clear input
+      // Clear field
       oEvent.getSource().setValue("");
     },
 

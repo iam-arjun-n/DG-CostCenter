@@ -19,6 +19,9 @@ sap.ui.define([
 
             this._setupInboxActions();
             this._loadWorkflowContext();
+            this.setModel(new JSONModel([]), "initiatorModel");
+            this.setModel(new JSONModel([]), "approverModel");
+            this.setModel(new JSONModel([]), "commentModel");
         },
 
         createContent: function () {
@@ -97,17 +100,19 @@ sap.ui.define([
                 );
 
                 // Comments model
-                view.setModel(
-                    new JSONModel(
-                        (data.comments || []).map(c => ({
-                            Text: c.commentText,
-                            UserName: c.user,
-                            Date: c.createdAt ? new Date(c.createdAt).toLocaleString() : "",
-                            IsNew: false
-                        }))
-                    ),
-                    "commentModel"
-                );
+                const initComments = (data.comments || [])
+                    .filter(c => c.role !== "Approver")
+                    .map(c => ({
+                        Text: c.commentText,
+                        UserName: c.createdBy,
+                        Date: c.createdAt ? new Date(c.createdAt).toLocaleString() : "",
+                        IsNew: false
+                    }));
+
+                this.getModel("initiatorModel").setData(initComments);
+
+                // after loading both models, merge
+                this._mergeComments();
 
             } catch (e) {
                 console.error("Unexpected CAP load error:", e);
@@ -323,7 +328,40 @@ ${JSON.stringify({
             if (!res.ok) {
                 throw new Error("Workflow task completion failed");
             }
-        }
+        },
+
+        addApproverCommentToModels: function (text, userName) {
+
+            const apprModel = this.getModel("approverModel");
+            const arr = apprModel.getData() || [];
+
+            const now = new Date().toLocaleString();
+
+            arr.push({
+                Text: text,
+                UserName: userName || "Approver",
+                Date: now,
+                IsNew: true
+            });
+
+            apprModel.setData(arr);
+            this._mergeComments();
+        },
+        _mergeComments: function () {
+
+            const init = this.getModel("initiatorModel").getData() || [];
+            const appr = this.getModel("approverModel").getData() || [];
+
+            // merge + newest at the top
+            const merged = [...appr, ...init];
+
+            // sort by date-desc if needed
+            merged.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+
+            this.getModel("commentModel").setData(merged);
+        },
+
+
 
 
 
