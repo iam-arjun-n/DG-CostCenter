@@ -3,7 +3,7 @@
     xmlns:f="sap.ui.layout.form"
     xmlns:l="sap.ui.layout">
 
-    <Dialog
+    <Dialog 
         resizable="true"
         draggable="true"
         contentHeight="100%"
@@ -14,9 +14,11 @@
             <IconTabBar class="sapUiResponsiveContentPadding">
 
                 <items>
-                    <IconTabFilter text="Initial Screen" icon="sap-icon://add-contact">
 
-                        <f:SimpleForm editable="true"
+                    <!-- Header -->
+                    <IconTabFilter text="Header Data" icon="sap-icon://add-contact">
+
+                        <f:SimpleForm editable="false"
                                       layout="ResponsiveGridLayout"
                                       labelSpanXL="4"
                                       labelSpanL="3"
@@ -40,14 +42,22 @@
                                     displayFormat="long"
                                     editable="false" />
 
+                                <Label text="Valid To"/>
+                                <DatePicker
+                                    value="{line>/validTo}"
+                                    valueFormat="yyyy-MM-dd"
+                                    displayFormat="long"
+                                    editable="false" />
+
                             </f:content>
                         </f:SimpleForm>
 
                     </IconTabFilter>
 
+                    <!-- Basic Data -->
                     <IconTabFilter text="Basic Data" icon="sap-icon://business-card">
 
-                        <f:SimpleForm editable="true"
+                        <f:SimpleForm editable="false"
                                       layout="ResponsiveGridLayout"
                                       labelSpanXL="5"
                                       labelSpanL="4"
@@ -96,7 +106,50 @@
                                 <Input value="{line>/profitCenter}" editable="false"/>
 
                             </f:content>
+                        </f:SimpleForm>
 
+                    </IconTabFilter>
+
+                    <!-- Control -->
+                    <IconTabFilter text="Control" icon="sap-icon://settings">
+
+                        <f:SimpleForm
+                            editable="false"
+                            layout="ResponsiveGridLayout"
+                            labelSpanXL="5"
+                            labelSpanL="4"
+                            labelSpanM="12"
+                            columnsXL="2"
+                            columnsL="2"
+                            columnsM="1">
+
+                            <f:content>
+
+                                <Label text="Record Quantity"/>
+                                <CheckBox selected="{line>/recordQuantity}" enabled="false"/>
+
+                                <Label text="Actual Primary Costs"/>
+                                <CheckBox selected="{line>/actualPrimaryCosts}" enabled="false"/>
+
+                                <Label text="Actual Secondary Costs"/>
+                                <CheckBox selected="{line>/actualSecondaryCosts}" enabled="false"/>
+
+                                <Label text="Plan Primary Costs"/>
+                                <CheckBox selected="{line>/planPrimaryCosts}" enabled="false"/>
+
+                                <Label text="Plan Secondary Costs"/>
+                                <CheckBox selected="{line>/planSecondaryCosts}" enabled="false"/>
+
+                                <Label text="Actual Revenue"/>
+                                <CheckBox selected="{line>/actualRevenue}" enabled="false"/>
+
+                                <Label text="Plan Revenue"/>
+                                <CheckBox selected="{line>/planRevenue}" enabled="false"/>
+
+                                <Label text="Commitment Update"/>
+                                <CheckBox selected="{line>/commitmentUpdate}" enabled="false"/>
+
+                            </f:content>
                         </f:SimpleForm>
 
                     </IconTabFilter>
