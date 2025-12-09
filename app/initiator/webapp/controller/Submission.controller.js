@@ -280,16 +280,27 @@ sap.ui.define([
             }
 
             var data = oModel.getData() || {};
-            var filled = data.controllingArea && data.costCenter && data.validFrom;
+            var filled = data.controllingArea && data.costCenter && data.validFrom && data.validTo;
 
-            var oTab = this.byId("Tab_BasicData");
-            if (oTab && oTab.setEnabled) {
-                oTab.setEnabled(!!filled);
+            var tabBasic = this.byId("Tab_BasicData");
+            var tabControl = this.byId("Tab_Control");
+
+            if (tabBasic && tabBasic.setEnabled) {
+                tabBasic.setEnabled(!!filled);
+            }
+
+            if (tabControl && tabControl.setEnabled) {
+                tabControl.setEnabled(!!filled);
             }
         },
 
+
         onSubmitCostCenter: function () {
             if (!this._CostCenterForm) {
+                return;
+            }
+
+            if (!this._checkMandatoryFields()) {
                 return;
             }
 
@@ -441,9 +452,11 @@ sap.ui.define([
                     requestType: oDraft.requestType,
                     createdByName: oDraft.createdByName,
                     costCenterData: oDraft.costCenterData.map(i => ({
+                        //Basic Data Tab
                         controllingArea: i.controllingArea,
                         costCenter: i.costCenter,
                         validFrom: this.toISO(i.validFrom),
+                        validTo: this.toISO(i.validTo),
                         name: i.name,
                         description: i.description,
                         userResponsible: i.userResponsible,
@@ -454,7 +467,17 @@ sap.ui.define([
                         companyCode: i.companyCode,
                         businessArea: i.businessArea,
                         currency: i.currency,
-                        profitCenter: i.profitCenter
+                        profitCenter: i.profitCenter,
+
+                        //Control Tab
+                        recordQuantity: i.recordQuantity,
+                        actualPrimaryCosts: i.actualPrimaryCosts,
+                        actualSecondaryCosts: i.actualSecondaryCosts,
+                        planPrimaryCosts: i.planPrimaryCosts,
+                        planSecondaryCosts: i.planSecondaryCosts,
+                        actualRevenue: i.actualRevenue,
+                        planRevenue: i.planRevenue,
+                        commitmentUpdate: i.commitmentUpdate
                     })),
                     comments: comments.map(c => ({
                         user: c.UserName,
@@ -465,7 +488,7 @@ sap.ui.define([
 
                 let listBinding = oModel.bindList("/CostCenterRequests");
                 let context = await listBinding.create(payload);
-                await context.created(); 
+                await context.created();
                 let reqId = context.getProperty("requestId");
                 let response = await fetch(
                     this._getWorkflowBaseURL() + "/workflow-instances",
@@ -524,14 +547,24 @@ sap.ui.define([
 
 
         _getInitialFieldIds: function () {
-            return ["controllingArea", "costCenter", "validFrom"];
+            return ["controllingArea", "costCenter", "validFrom", "validTo"];
         },
 
         _getOtherFieldIds: function () {
             return [
                 "name", "description", "userResponsible", "personResponsible",
                 "department", "costCenterCategory", "hierarchyArea",
-                "companyCode", "businessArea", "currency", "profitCenter"
+                "companyCode", "businessArea", "currency", "profitCenter",
+
+                // Control tab Optional
+                "recordQuantity",
+                "actualPrimaryCosts",
+                "actualSecondaryCosts",
+                "planPrimaryCosts",
+                "planSecondaryCosts",
+                "actualRevenue",
+                "planRevenue",
+                "commitmentUpdate"
             ];
         },
 
@@ -545,6 +578,40 @@ sap.ui.define([
                 }
             });
         },
+
+        _checkMandatoryFields: function () {
+            var oModel = this._CostCenterForm.getModel("DataModel");
+            var d = oModel.getData();
+
+            var missing = [];
+
+            function req(field, label) {
+                if (!d[field] || d[field] === "") {
+                    missing.push(label);
+                }
+            }
+
+            // Header Data
+            req("controllingArea", "Controlling Area");
+            req("costCenter", "Cost Center");
+            req("validFrom", "Valid From");
+            req("validTo", "Valid To");
+
+            // Basic Data
+            req("personResponsible", "Person Responsible");
+            req("costCenterCategory", "Cost Center Category");
+            req("hierarchyArea", "Hierarchy Area");
+            req("companyCode", "Company Code");
+            req("currency", "Currency");
+
+            if (missing.length > 0) {
+                MessageBox.error("Please enter mandatory fields:\n\n• " + missing.join("\n• "));
+                return false;
+            }
+
+            return true;
+        },
+
 
         // Core rule engine: applies EDIT mode rules per requestType
         _applyEditModeForRequestType: function () {
