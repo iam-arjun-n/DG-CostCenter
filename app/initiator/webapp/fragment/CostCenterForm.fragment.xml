@@ -102,10 +102,26 @@
                 </items>
             </IconTabBar>
         </content>
-
-        <buttons>
+        <footer>
+            <OverflowToolbar id="ots1Toolbar">
+            <Button id="ccMsgButton"
+            icon="sap-icon://message-popup"
+            text="{= ${ccMessageModel>/messages}.length }"
+            press="onCCMessagePopoverPress">
+        <dependents>
+            <MessagePopover id="ccMsgPopover"
+                            items="{ccMessageModel>/messages}">
+                <MessageItem id="_IDGenMessageItem"
+                    type="{ccMessageModel>type}"
+                    title="{ccMessageModel>title}"
+                    description="{ccMessageModel>description}" />
+            </MessagePopover>
+        </dependents>
+    </Button>
+    <ToolbarSpacer id="ts1Spacer" />
             <Button id="CCForm_Button" text="Submit" type="Emphasized" press="onSubmitCostCenter"/>
             <Button id="CCForm_Button1" text="Cancel" press="onCancelCostCenter"/>
-        </buttons>
+        </OverflowToolbar>
+        </footer>
     </Dialog>
 </core:FragmentDefinition>

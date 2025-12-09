@@ -241,6 +241,11 @@ sap.ui.define([
                 oData.actualRevenue = (oData.actualRevenue !== false);
             }
 
+            // lazy-create the message model (cache on controller)
+            if (!this._ccMessageModel) {
+                this._ccMessageModel = new JSONModel({ messages: [] });
+            }
+
             // ===== LOAD DIALOG =====
             if (!this._CostCenterForm) {
                 Fragment.load({
@@ -251,14 +256,23 @@ sap.ui.define([
                     this._CostCenterForm = dlg;
                     oView.addDependent(dlg);
 
+                    // Data model for form fields
                     var oModel = new sap.ui.model.json.JSONModel(oData);
                     dlg.setModel(oModel, "DataModel");
+
+                    // Attach/create the cc message model on the dialog (so validator can write to it)
+                    dlg.setModel(this._ccMessageModel, "ccMessageModel");
+
                     dlg.open();
 
                     this._checkInitialFilled();
                     this._applyDialogMode();
+                }.bind(this)).catch(function (err) {
+                    // defensive: show error if fragment failed to load
+                    MessageToast.show("Failed to open Cost Center dialog: " + (err.message || err));
                 }.bind(this));
             } else {
+                // dialog already created — update data model
                 var oModel = this._CostCenterForm.getModel("DataModel");
                 if (!oModel) {
                     oModel = new sap.ui.model.json.JSONModel(oData);
@@ -267,11 +281,17 @@ sap.ui.define([
                     oModel.setData(oData);
                 }
 
+                // ensure the ccMessageModel is attached to the existing dialog
+                if (!this._CostCenterForm.getModel("ccMessageModel")) {
+                    this._CostCenterForm.setModel(this._ccMessageModel, "ccMessageModel");
+                }
+
                 this._CostCenterForm.open();
                 this._checkInitialFilled();
                 this._applyDialogMode();
             }
         },
+
 
         // Central place: decides editability based on mode + request type
         _applyDialogMode: function () {
@@ -329,7 +349,8 @@ sap.ui.define([
                 return;
             }
 
-            if (!this._checkMandatoryFields()) {
+            if (!this._validateCostCenterForm()) {
+                this.onCCMessagePopoverPress({ getSource: () => this.byId("ccMsgButton") });
                 return;
             }
 
@@ -692,7 +713,7 @@ sap.ui.define([
                     ctrl.setEditable(!value);
                 });
             }
-            
+
             var always = ["validFrom", "validTo"];
             always.forEach(function (id) {
                 var ctrl = that.byId(id);
@@ -1008,6 +1029,134 @@ sap.ui.define([
             } catch (e) {
                 return mock;
             }
+        },
+
+        //Mandatory Check:
+        _validateCostCenterForm: function () {
+
+            // prefer the fragment dialog reference; fallback to view.byId
+            const oDialog = this._CostCenterForm || this.byId("CostCenterForm_Dialog");
+            if (!oDialog) {
+                // nothing to validate
+                return true;
+            }
+
+            const aErrors = [];
+
+            // iterate controls inside dialog and mark required empty fields
+            oDialog.findElements(true).forEach(ctrl => {
+                if (ctrl.getRequired && ctrl.getRequired()) {
+
+                    let val = this._getValueFromCC(ctrl);
+
+                    if (!val) {
+                        let label = this._findLabelForCC(ctrl);
+
+                        aErrors.push({
+                            type: "Error",
+                            title: label + " is mandatory",
+                            description: "Please provide a value for " + label
+                        });
+
+                        // Visual feedback on control
+                        if (ctrl.setValueState) {
+                            ctrl.setValueState("Error");
+                            if (ctrl.setValueStateText) {
+                                ctrl.setValueStateText(label + " is mandatory");
+                            }
+                        }
+                    } else {
+                        if (ctrl.setValueState) {
+                            ctrl.setValueState("None");
+                        }
+                    }
+                }
+            });
+
+            // ensure the ccMessageModel exists on the dialog before writing
+            var ccModel = oDialog.getModel("ccMessageModel");
+            if (!ccModel) {
+                // create+attach and keep cache in controller
+                this._ccMessageModel = this._ccMessageModel || new JSONModel({ messages: [] });
+                oDialog.setModel(this._ccMessageModel, "ccMessageModel");
+                ccModel = oDialog.getModel("ccMessageModel");
+            }
+
+            // update messages (used by popover/message view)
+            ccModel.setProperty("/messages", aErrors);
+
+            return aErrors.length === 0;
+        },
+
+
+        onCCMessagePopoverPress: function (oEvent) {
+
+            // locate or create the popover
+            if (!this._ccMsgPopover) {
+                this._ccMsgPopover = this.byId("ccMsgPopover");
+            }
+
+            // get the button from dialog
+            let btn = this.byId("ccMsgButton");
+
+            // fallback for fragment scope
+            if (!btn && this._CostCenterForm) {
+                btn = this._CostCenterForm.byId("ccMsgButton");
+            }
+
+            // open it
+            if (btn) {
+                this._ccMsgPopover.openBy(btn);
+            }
+        },
+
+        _getValueFromCC: function (ctrl) {
+
+            if (ctrl.getValue) return ctrl.getValue();
+            if (ctrl.getSelectedKey) return ctrl.getSelectedKey();
+            if (ctrl.getSelectedKeys) return ctrl.getSelectedKeys().length ? ctrl.getSelectedKeys() : null;
+            if (ctrl.getSelectedItem) return ctrl.getSelectedItem()?.getKey();
+            if (ctrl.getDateValue) return ctrl.getDateValue();
+
+            return null;
+        },
+
+        _findLabelForCC: function (ctrl) {
+
+            const dialog = this.byId("CostCenterForm_Dialog");
+            const id = ctrl.getId();
+            let result = "";
+
+            dialog.findElements(true).forEach(el => {
+                if (el.getLabelFor && el.getLabelFor() === id) {
+                    result = el.getText();
+                }
+            });
+
+            return result || ctrl.getName() || id;
+        },
+        _showCostCenterValidationErrors: function (aErrors) {
+
+            const items = aErrors.map(msg => new sap.m.MessageItem({
+                type: sap.ui.core.MessageType.Error,
+                title: msg
+            }));
+
+            const view = new sap.m.MessageView({ items });
+
+            const dlg = new sap.m.Dialog({
+                title: "Validation Errors",
+                state: sap.ui.core.ValueState.Error,
+                contentHeight: "280px",
+                resizable: true,
+                content: view,
+                beginButton: new sap.m.Button({
+                    text: "Close",
+                    press: () => dlg.close()
+                })
+            });
+
+            dlg.open();
         },
 
 
