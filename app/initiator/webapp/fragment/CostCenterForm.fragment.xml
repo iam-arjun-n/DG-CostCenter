@@ -77,24 +77,27 @@
                             editable="true" layout="ResponsiveGridLayout" labelSpanXL="5" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
                             <f:content>
                             <core:Title id="CCForm_Title6"  />
-                            <Label id="CCForm_Label15" text="Record Quantity"/>
-                            <CheckBox id="recordQuantity" selected="{DataModel>/recordQuantity}" />
-                            <Label id="CCForm_Label16" text="Actual Primary Costs"/>
-                            <CheckBox id="actualPrimaryCosts" selected="{DataModel>/actualPrimaryCosts}" />
-                            <Label id="CCForm_Label17" text="Actual Secondary Costs"/>
-                            <CheckBox id="actualSecondaryCosts" selected="{DataModel>/actualSecondaryCosts}" />
-                            <Label id="CCForm_Label18" text="Plan Primary Costs"/>
-                            <CheckBox id="planPrimaryCosts" selected="{DataModel>/planPrimaryCosts}" />
+                            <Label id="CCForm_Label15" text="Record Quantity" tooltip="Record Quantity"/>
+                            <CheckBox 
+                            id="recordQuantity" 
+                            selected="{DataModel>/recordQuantity}" 
+                            tooltip="Record Quantity"/>
+                            <Label id="CCForm_Label16" text="Actual Primary Costs" tooltip="Actual Primary Costs"/>
+                            <CheckBox id="actualPrimaryCosts" selected="{DataModel>/actualPrimaryCosts}" tooltip="Actual Primary Costs"/>
+                            <Label id="CCForm_Label17" text="Actual Secondary Costs" tooltip="Actual Secondary Costs"/>
+                            <CheckBox id="actualSecondaryCosts" selected="{DataModel>/actualSecondaryCosts}" tooltip="Actual Secondary Costs"/>
+                            <Label id="CCForm_Label18" text="Plan Primary Costs" tooltip="Plan Primary Costs"/>
+                            <CheckBox id="planPrimaryCosts" selected="{DataModel>/planPrimaryCosts}" tooltip="Plan Primary Costs"/>
 
                             <core:Title id="CCForm_Title7"  />
-                            <Label id="CCForm_Label19" text="Plan Secondary Costs"/>
-                            <CheckBox id="planSecondaryCosts" selected="{DataModel>/planSecondaryCosts}" />
-                            <Label id="CCForm_Label20" text="Actual Revenue"/>
-                            <CheckBox id="actualRevenue" selected="{DataModel>/actualRevenue}" />
-                            <Label id="CCForm_Label21" text="Plan Revenue"/>
-                            <CheckBox id="planRevenue" selected="{DataModel>/planRevenue}" />
-                            <Label id="CCForm_Label22" text="Commitment Update"/>
-                            <CheckBox id="commitmentUpdate" selected="{DataModel>/commitmentUpdate}" />
+                            <Label id="CCForm_Label19" text="Plan Secondary Costs" tooltip="Plan Secondary Costs"/>
+                            <CheckBox id="planSecondaryCosts" selected="{DataModel>/planSecondaryCosts}" tooltip="Plan Secondary Costs"/>
+                            <Label id="CCForm_Label20" text="Actual Revenue" tooltip="Actual Revenue"/>
+                            <CheckBox id="actualRevenue" selected="{DataModel>/actualRevenue}" tooltip="Actual Revenue"/>
+                            <Label id="CCForm_Label21" text="Plan Revenue" tooltip="Plan Revenue"/>
+                            <CheckBox id="planRevenue" selected="{DataModel>/planRevenue}"  tooltip="Plan Revenue"/>
+                            <Label id="CCForm_Label22" text="Commitment Update" tooltip="Commitment Update"/>
+                            <CheckBox id="commitmentUpdate" selected="{DataModel>/commitmentUpdate}" tooltip="Commitment Update"/>
         </f:content>
     </f:SimpleForm>
 </IconTabFilter>
