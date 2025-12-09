@@ -14,11 +14,11 @@
                                       columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
                             <f:content>
                                 <Label id="CCForm_Label1" text="Controlling Area" labelFor="controllingArea"/>
-                                <Input id="controllingArea" required="true" value="{DataModel>/controllingArea}" change="onInputValueChange" showValueHelp="true"
+                                <Input id="controllingArea" required="true" value="{DataModel>/controllingArea}" change="onInputValueChange" liveChange="onInputValueChange" showValueHelp="true"
     valueHelpRequest="onValueHelpRequestControllingArea"/>
 
                                 <Label id="CCForm_Label2" text="Cost Center" labelFor="costCenter"/>
-                                <Input id="costCenter" required="true" value="{DataModel>/costCenter}" change="onInputValueChange" showValueHelp="true" valueHelpRequest="onValueHelpRequestCostCenter"/>
+                                <Input id="costCenter" required="true" value="{DataModel>/costCenter}" change="onInputValueChange" liveChange="onInputValueChange" showValueHelp="true" valueHelpRequest="onValueHelpRequestCostCenter"/>
 
                                 <Label id="CCForm_Label3" text="Valid From" labelFor="validFrom"/>
                                 <DatePicker id="validFrom" required="true" value="{DataModel>/validFrom}" valueFormat="yyyy-MM-dd" displayFormat="long" change="onInputValueChange"/>

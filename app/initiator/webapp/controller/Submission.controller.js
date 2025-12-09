@@ -221,6 +221,27 @@ sap.ui.define([
             var oView = this.getView();
             this._currentDialogMode = sMode || "edit";
 
+            // ===== DEFAULT VALUES FOR CREATE MODE =====
+            if (this._currentDialogMode === "edit" && this._editIndex == null) {
+
+                let today = new Date();
+                let endDate = new Date(9999, 11, 31); // Dec = 11
+
+                // Format: "December 16, 2025"
+                let formatter = sap.ui.core.format.DateFormat.getDateInstance({
+                    style: "long"
+                });
+
+                // Apply defaults only if empty
+                oData.controllingArea = oData.controllingArea || "1100";
+                oData.validFrom = oData.validFrom || formatter.format(today);
+                oData.validTo = oData.validTo || formatter.format(endDate);
+
+                // Default checkbox
+                oData.actualRevenue = (oData.actualRevenue !== false);
+            }
+
+            // ===== LOAD DIALOG =====
             if (!this._CostCenterForm) {
                 Fragment.load({
                     id: oView.getId(),
@@ -265,9 +286,17 @@ sap.ui.define([
             }
         },
 
-        onInputValueChange: function () {
+        onInputValueChange: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue();
+
+            // write to model immediately
+            var sPath = oInput.getBinding("value").getPath();
+            oInput.getModel("DataModel").setProperty(sPath, sValue);
+
             this._checkInitialFilled();
         },
+
 
         _checkInitialFilled: function () {
             if (!this._CostCenterForm) {
