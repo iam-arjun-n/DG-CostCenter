@@ -14,11 +14,11 @@
                                       columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
                             <f:content>
                                 <Label id="CCForm_Label1" text="Controlling Area" labelFor="controllingArea"/>
-                                <Input id="controllingArea" required="true" value="{DataModel>/controllingArea}" change="onInputValueChange" liveChange="onInputValueChange" showValueHelp="true"
+                                <Input id="controllingArea" required="true" value="{DataModel>/controllingArea}" change="validateControllingArea" liveChange="validateControllingArea" showValueHelp="true"
     valueHelpRequest="onValueHelpRequestControllingArea"/>
 
                                 <Label id="CCForm_Label2" text="Cost Center" labelFor="costCenter"/>
-                                <Input id="costCenter" required="true" value="{DataModel>/costCenter}" change="onInputValueChange" liveChange="onInputValueChange" showValueHelp="true" valueHelpRequest="onValueHelpRequestCostCenter"/>
+                                <Input id="costCenter" required="true" value="{DataModel>/costCenter}" change="validateCostCenter" liveChange="validateCostCenter" showValueHelp="true" valueHelpRequest="onValueHelpRequestCostCenter"/>
 
                                 <Label id="CCForm_Label3" text="Valid From" labelFor="validFrom"/>
                                 <DatePicker id="validFrom" required="true" value="{DataModel>/validFrom}" valueFormat="yyyy-MM-dd" displayFormat="long" change="onInputValueChange"/>
@@ -35,16 +35,17 @@
                             <f:content >
                             <core:Title id="CCForm_Title4"  />
                                 <Label id="CCForm_Label4" text="Name" labelFor="name"  />
-                                <Input id="name" value="{DataModel>/name}" change="onInputValueChange"/>
+                                <Input id="name" value="{DataModel>/name}" change="validateName" liveChange="validateName"/>
 
                                 <Label id="CCForm_Label5" text="Description" labelFor="description"  />
-                                <Input id="description" value="{DataModel>/description}" change="onInputValueChange"/>
+                                <Input id="description" value="{DataModel>/description}" liveChange="validateDescription"
+change="validateDescription"/>
                                 
                                 <Label id="CCForm_Label6" text="User Responsible" labelFor="userResponsible"  />
                                 <Input id="userResponsible" value="{DataModel>/userResponsible}" change="onInputValueChange"/>
                                 
                                 <Label id="CCForm_Label7" text="Person Responsible" labelFor="personResponsible"  />
-                                <Input id="personResponsible" required="true" value="{DataModel>/personResponsible}" change="onInputValueChange"/>
+                                <Input id="personResponsible" required="true" value="{DataModel>/personResponsible}" change="validatePersonResponsible" liveChange="validatePersonResponsible"/>
                                 
                                 <Label id="CCForm_Label8" text="Department" labelFor="department"  />
                                 <Input id="department" value="{DataModel>/department}" change="onInputValueChange"/>

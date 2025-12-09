@@ -375,11 +375,26 @@ sap.ui.define([
         },
 
         onCancelCostCenter: function () {
+
             if (this._CostCenterForm) {
+
+                // clear message model
+                let mm = this._CostCenterForm.getModel("ccMessageModel");
+                if (mm) {
+                    mm.setProperty("/messages", []);
+                }
+
+                // remove red borders
+                this._CostCenterForm.findElements(true).forEach(ctrl => {
+                    if (ctrl.setValueState) {
+                        ctrl.setValueState("None");
+                    }
+                });
+
                 this._CostCenterForm.close();
             }
+
             this._editIndex = null;
-            // No need to restore anything; next open recalculates editability
         },
 
         deleteCostCenter: function () {
@@ -1034,17 +1049,26 @@ sap.ui.define([
         //Mandatory Check:
         _validateCostCenterForm: function () {
 
-            // prefer the fragment dialog reference; fallback to view.byId
             const oDialog = this._CostCenterForm || this.byId("CostCenterForm_Dialog");
             if (!oDialog) {
-                // nothing to validate
                 return true;
             }
 
+            // --- CLEAR OLD ERRORS ---
+            let ccModel = oDialog.getModel("ccMessageModel");
+            if (!ccModel) {
+                this._ccMessageModel = this._ccMessageModel || new JSONModel({ messages: [] });
+                oDialog.setModel(this._ccMessageModel, "ccMessageModel");
+                ccModel = oDialog.getModel("ccMessageModel");
+            }
+
+            ccModel.setProperty("/messages", []); // reset previous validation messages
+
             const aErrors = [];
 
-            // iterate controls inside dialog and mark required empty fields
+            // --- VALIDATE REQUIRED CONTROLS ---
             oDialog.findElements(true).forEach(ctrl => {
+
                 if (ctrl.getRequired && ctrl.getRequired()) {
 
                     let val = this._getValueFromCC(ctrl);
@@ -1052,19 +1076,20 @@ sap.ui.define([
                     if (!val) {
                         let label = this._findLabelForCC(ctrl);
 
+                        // add to error list
                         aErrors.push({
+                            id: ctrl.getId(),
                             type: "Error",
                             title: label + " is mandatory",
                             description: "Please provide a value for " + label
                         });
 
-                        // Visual feedback on control
+                        // highlight the control
                         if (ctrl.setValueState) {
                             ctrl.setValueState("Error");
-                            if (ctrl.setValueStateText) {
-                                ctrl.setValueStateText(label + " is mandatory");
-                            }
+                            ctrl.setValueStateText(label + " is mandatory");
                         }
+
                     } else {
                         if (ctrl.setValueState) {
                             ctrl.setValueState("None");
@@ -1073,20 +1098,12 @@ sap.ui.define([
                 }
             });
 
-            // ensure the ccMessageModel exists on the dialog before writing
-            var ccModel = oDialog.getModel("ccMessageModel");
-            if (!ccModel) {
-                // create+attach and keep cache in controller
-                this._ccMessageModel = this._ccMessageModel || new JSONModel({ messages: [] });
-                oDialog.setModel(this._ccMessageModel, "ccMessageModel");
-                ccModel = oDialog.getModel("ccMessageModel");
-            }
-
-            // update messages (used by popover/message view)
+            // --- WRITE BACK INTO MODEL FOR POPOVER ---
             ccModel.setProperty("/messages", aErrors);
 
             return aErrors.length === 0;
         },
+
 
 
         onCCMessagePopoverPress: function (oEvent) {
@@ -1158,8 +1175,83 @@ sap.ui.define([
 
             dlg.open();
         },
+        _updateFieldError: function (ctrl, msg) {
 
-        
+            // Get model
+            var oModel = this._CostCenterForm.getModel("ccMessageModel");
+            if (!oModel) {
+                this._ccMessageModel = this._ccMessageModel || new sap.ui.model.json.JSONModel({ messages: [] });
+                this._CostCenterForm.setModel(this._ccMessageModel, "ccMessageModel");
+                oModel = this._CostCenterForm.getModel("ccMessageModel");
+            }
+
+            // Remove old errors for this field
+            var aMessages = oModel.getProperty("/messages") || [];
+            var id = ctrl.getId();
+            aMessages = aMessages.filter(m => m.id !== id);
+
+            // Add new if error exists
+            if (msg) {
+                aMessages.push({
+                    id: id,
+                    type: "Error",
+                    title: msg,
+                    description: msg
+                });
+                ctrl.setValueState("Error");
+                ctrl.setValueStateText(msg);
+            } else {
+                ctrl.setValueState("None");
+            }
+
+            // Update model with new message list
+            oModel.setProperty("/messages", aMessages);
+        },
+
+        //Validation
+        validateControllingArea:function(oEvent){
+            this.onInputValueChange(oEvent)
+        },
+
+        validateCostCenter:function(oEvent){
+            this.onInputValueChange(oEvent)
+        },
+
+        validateDescription: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+
+            if (val.length > 40) {
+                this._updateFieldError(ctrl, "Description cannot exceed 40 characters");
+                return;
+            }
+
+            if (!/^[A-Za-z0-9 ]*$/.test(val)) {
+                this._updateFieldError(ctrl, "No special characters allowed");
+                return;
+            }
+
+            this._updateFieldError(ctrl, null);
+        },
+
+        validateName: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            const val = ctrl.getValue().trim();
+
+            if (!/^[A-Za-z ]*$/.test(val)) {
+                this._updateFieldError(ctrl, "No special characters allowed");
+                return;
+            }
+
+            if (val.length > 30) {
+                this._updateFieldError(ctrl, "Name cannot exceed 30 characters");
+                return;
+            }
+
+            this._updateFieldError(ctrl, null);
+        }
+
+
 
     });
 });
