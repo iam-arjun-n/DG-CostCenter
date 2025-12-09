@@ -287,6 +287,7 @@ sap.ui.define([
                 }
 
                 this._CostCenterForm.open();
+
                 this._checkInitialFilled();
                 this._applyDialogMode();
             }
@@ -345,6 +346,10 @@ sap.ui.define([
 
 
         onSubmitCostCenter: function () {
+            if (this._currentDialogMode === "view") {
+                this._CostCenterForm.close();
+                return;
+            }
             if (!this._CostCenterForm) {
                 return;
             }
@@ -1209,12 +1214,29 @@ sap.ui.define([
         },
 
         //Validation
-        validateControllingArea:function(oEvent){
+        validateControllingArea: function (oEvent) {
             this.onInputValueChange(oEvent)
         },
 
-        validateCostCenter:function(oEvent){
+        validateCostCenter: function (oEvent) {
             this.onInputValueChange(oEvent)
+        },
+
+        validateName: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            const val = ctrl.getValue().trim();
+
+            if (!/^[A-Za-z ]*$/.test(val)) {
+                this._updateFieldError(ctrl, "No special characters allowed");
+                return;
+            }
+
+            if (val.length > 30) {
+                this._updateFieldError(ctrl, "Name cannot exceed 30 characters");
+                return;
+            }
+
+            this._updateFieldError(ctrl, null);
         },
 
         validateDescription: function (oEvent) {
@@ -1234,24 +1256,45 @@ sap.ui.define([
             this._updateFieldError(ctrl, null);
         },
 
-        validateName: function (oEvent) {
-            const ctrl = oEvent.getSource();
-            const val = ctrl.getValue().trim();
+        validatePersonResponsible: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
-            if (!/^[A-Za-z ]*$/.test(val)) {
-                this._updateFieldError(ctrl, "No special characters allowed");
-                return;
-            }
+        validateDepartment: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
-            if (val.length > 30) {
-                this._updateFieldError(ctrl, "Name cannot exceed 30 characters");
-                return;
-            }
+        validateCostCenterCategory: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
-            this._updateFieldError(ctrl, null);
-        }
+        validateHierarchyArea: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
+        validateCompanyCode: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
+        validateBusinessArea: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
+
+        validateCurrency: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
+
+        validateProfileCenter: function (oEvent) {
+            var ctrl = oEvent.getSource();
+            var val = ctrl.getValue().trim();
+        },
 
     });
 });
