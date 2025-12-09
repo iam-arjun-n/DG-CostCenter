@@ -652,7 +652,6 @@ sap.ui.define([
 
             if (sType === "Create") {
                 this._setAllDialogFieldsEditable(true);
-                return;
             }
 
             if (sType === "Change") {
@@ -668,7 +667,6 @@ sap.ui.define([
                         ctrl.setEditable(true);
                     }
                 });
-                return;
             }
 
             if (sType === "Extend") {
@@ -691,14 +689,18 @@ sap.ui.define([
                         return;
                     }
                     var value = oData[id];
-                    // If value exists → readonly, else editable
                     ctrl.setEditable(!value);
                 });
-                return;
             }
+            
+            var always = ["validFrom", "validTo"];
+            always.forEach(function (id) {
+                var ctrl = that.byId(id);
+                if (ctrl && ctrl.setEditable) {
+                    ctrl.setEditable(false);
+                }
+            });
 
-            // Default fallback: make everything editable
-            this._setAllDialogFieldsEditable(true);
         },
 
         _openF4Dialog: function (title) {

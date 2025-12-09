@@ -33,7 +33,7 @@
                     <IconTabFilter id="Tab_BasicData" text="Basic Data" icon="sap-icon://business-card" enabled="false">
                         <f:SimpleForm id="SimpleForm_Basic" editable="true" layout="ResponsiveGridLayout" labelSpanXL="5" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
                             <f:content >
-                            <core:Title id="_IDVendorTitle4"  />
+                            <core:Title id="CCForm_Title4"  />
                                 <Label id="CCForm_Label4" text="Name" labelFor="name"  />
                                 <Input id="name" value="{DataModel>/name}" change="onInputValueChange"/>
 
@@ -51,7 +51,8 @@
                                 
                                 <Label id="CCForm_Label9" text="Cost Center Category" labelFor="costCenterCategory"  />
                                 <Input id="costCenterCategory" required="true" value="{DataModel>/costCenterCategory}" change="onInputValueChange" showValueHelp="true" valueHelpRequest="onValueHelpRequestCostCenterCategory"/>
-                                <core:Title id="_IDVendorTitle5"/>
+                                
+                                <core:Title id="CCForm_Title5"/>
                                 <Label id="CCForm_Label10" text="Hierarchy Area" labelFor="hierarchyArea"  />
                                 <Input id="hierarchyArea" required="true" value="{DataModel>/hierarchyArea}" change="onInputValueChange" showValueHelp="true" valueHelpRequest="onValueHelpRequestHierarchyArea"/>
                                 
@@ -73,14 +74,9 @@
 
                     <IconTabFilter id="Tab_Control" text="Control" icon="sap-icon://settings" enabled="false">
                         <f:SimpleForm id="SimpleForm_Control"
-                            editable="true"
-                            layout="ResponsiveGridLayout"
-                            labelSpanXL="5" labelSpanL="4" labelSpanM="12" labelSpanS="12"
-                            adjustLabelSpan="false"
-                            emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
-                            columnsXL="2" columnsL="2" columnsM="1"
-                            singleContainerFullSize="false">
+                            editable="true" layout="ResponsiveGridLayout" labelSpanXL="5" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="1" singleContainerFullSize="false">
                             <f:content>
+                            <core:Title id="CCForm_Title6"  />
                             <Label id="CCForm_Label15" text="Record Quantity"/>
                             <CheckBox id="recordQuantity" selected="{DataModel>/recordQuantity}" />
                             <Label id="CCForm_Label16" text="Actual Primary Costs"/>
@@ -89,6 +85,8 @@
                             <CheckBox id="actualSecondaryCosts" selected="{DataModel>/actualSecondaryCosts}" />
                             <Label id="CCForm_Label18" text="Plan Primary Costs"/>
                             <CheckBox id="planPrimaryCosts" selected="{DataModel>/planPrimaryCosts}" />
+
+                            <core:Title id="CCForm_Title7"  />
                             <Label id="CCForm_Label19" text="Plan Secondary Costs"/>
                             <CheckBox id="planSecondaryCosts" selected="{DataModel>/planSecondaryCosts}" />
                             <Label id="CCForm_Label20" text="Actual Revenue"/>
