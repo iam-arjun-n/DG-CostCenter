@@ -790,6 +790,12 @@ sap.ui.define([
             const oInput = sap.ui.getCore().byId(this._currentInputId);
             if (oInput) {
                 oInput.setValue(sValue);
+                const sPath = oInput.getBinding("value").getPath();
+                const oModel = oInput.getModel("DataModel");
+                oModel.setProperty(sPath, sValue);
+
+                // 3️⃣ recheck tabs enabling
+                this._checkInitialFilled();
             }
 
             this._F4Dialog.close();
