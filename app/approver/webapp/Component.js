@@ -151,78 +151,6 @@ sap.ui.define([
             }, () => this._onReject());
         },
 
-        _onApprove: async function () {
-            const view = this._getMainView();
-            const comments = view.getModel("commentModel")?.getData() ?? [];
-
-            if (!this._hasNewComment(comments)) {
-                MessageBox.information("Please add a comment before approving.");
-                return;
-            }
-
-            try {
-                const mainModel = view.getModel();
-                const lineData = mainModel.getData().costCenterData?.[0];
-
-                // --- POST to S/4 using BATCH ---
-                const csrf = await this._fetchS4Csrf();
-                const s4Base = this.getManifestEntry("/sap.app/dataSources/CostCenterAPI/uri");
-
-                const batchInfo = this._buildCreateCostCenterBatch(lineData);
-
-                const s4Resp = await fetch(s4Base + "$batch", {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": `multipart/mixed;boundary=${batchInfo.boundary}`,
-                        "X-CSRF-Token": csrf
-                    },
-                    body: batchInfo.payload
-                });
-
-                if (!s4Resp.ok) {
-                    const errText = await s4Resp.text();
-                    throw new Error("S/4 Batch Create Failed: " + errText);
-                }
-
-                // --- Update CAP Request ---
-                await this._updateStatus("Approved", "Completed");
-
-                // --- Save Comments ---
-                await this._saveNewComments(comments);
-
-                // --- Complete WF ---
-                await this._completeWorkflowTask();
-
-                MessageBox.success("Request approved.");
-                this._refreshInbox();
-
-            } catch (e) {
-                MessageBox.error(e.message);
-            }
-        },
-
-        _onReject: async function () {
-            const view = this._getMainView();
-            const comments = view.getModel("commentModel")?.getData() ?? [];
-
-            if (!this._hasNewComment(comments)) {
-                MessageBox.information("Please add a comment before rejecting.");
-                return;
-            }
-
-            try {
-                await this._updateStatus("Rejected", "Rejected");
-                await this._saveNewComments(comments);
-                await this._completeWorkflowTask();
-
-                MessageBox.error("Request rejected.");
-                this._refreshInbox();
-
-            } catch (e) {
-                MessageBox.error(e.message);
-            }
-        },
 
         _hasNewComment: function (comments) {
             return comments.some(c => c.IsNew);
@@ -275,10 +203,9 @@ sap.ui.define([
                 startup.taskModel.getData().InstanceID
             );
         },
-        _fetchS4Csrf: async function () {
-            const s4Base = this.getManifestEntry("/sap.app/dataSources/CostCenterAPI/uri");
-
-            const res = await fetch(s4Base, {
+        async _fetchCAPCsrf() {
+            const base = this._getDatabaseBaseURL();
+            const res = await fetch(base, {
                 method: "GET",
                 headers: { "X-CSRF-Token": "Fetch" },
                 credentials: "include"
@@ -311,23 +238,6 @@ ${JSON.stringify({
 --${boundary}--`;
 
             return { boundary, payload };
-        },
-        _completeWorkflowTask: async function () {
-            const base = this._getWorkflowBaseURL();
-            const taskId = this.getModel("task").getData().InstanceID;
-
-            const res = await fetch(`${base}/task-instances/${taskId}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                    status: "COMPLETED"
-                })
-            });
-
-            if (!res.ok) {
-                throw new Error("Workflow task completion failed");
-            }
         },
 
         addApproverCommentToModels: function (text, userName) {
@@ -363,7 +273,182 @@ ${JSON.stringify({
 
 
 
+        //Approve or Reject Logic
 
+
+        _sendDataToSAP: async function () {
+
+            const ctxModel = this.getModel("context");
+            const reqType = ctxModel.getProperty("/RequestType");   // "Create" | "Change" | "Extend"
+
+            let success = false;
+            let error = "";
+
+            try {
+                if (reqType === "Create") {
+                    // TODO: Batch POST to S/4 (leave space)
+                    success = true;
+                } else if (reqType === "Change" || reqType === "Extend") {
+                    // TODO: PATCH to S/4 (leave space)
+                    success = true;
+                }
+            } catch (e) {
+                success = false;
+                error = e.message;
+            }
+
+            return { success, error };
+        },
+
+        _getDatabaseBaseURL: function () {
+            const oModel = this.getModel("ServiceModel");
+            const sUrl = oModel && (oModel.sServiceUrl || oModel.oServiceUrl || oModel.getServiceUrl && oModel.getServiceUrl());
+
+            if (!sUrl) {
+                throw new Error("ServiceModel service URL not found");
+            }
+
+            return sUrl.endsWith("/") ? sUrl : sUrl + "/";
+        },
+
+        _updateRequestStatus: async function (reqStatus, wfStatus) {
+
+            const base = this._getDatabaseBaseURL();
+            const requestId = this._reqId;
+            const token = await this._fetchCAPCsrf();
+
+            const payload = {
+                requestStatus: reqStatus,
+                workflowStatus: wfStatus
+            };
+
+            await fetch(`${base}CostCenterRequests(requestId='${requestId}')`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": token
+                },
+                body: JSON.stringify(payload),
+                credentials: "include"
+            });
+        },
+
+        _updateRequestAfterSAP: async function (result) {
+            const reqStatus = result.success ? "Approved" : "Error";
+            const wfStatus = "Completed";
+            await this._updateRequestStatus(reqStatus, wfStatus);
+        },
+
+        _addApproveComment: async function () {
+
+            const view = this._getMainView();
+            const comments = view.getModel("commentModel")?.getData() || [];
+            const newComments = comments.filter(c => c.IsNew);
+
+            if (!newComments.length) {
+                return;
+            }
+
+            const base = this._getDatabaseBaseURL();
+            const token = await this._fetchCAPCsrf();
+            const requestId = this._reqId;
+
+            for (let c of newComments) {
+                const payload = {
+                    commentText: c.Text,
+                    role: "Approver",
+                    user: "approver@system.com",
+                    request_requestId: requestId
+                };
+
+                await fetch(`${base}CostCenterComments`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": token
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: "include"
+                });
+            }
+        },
+
+        _completeWorkflowTask: async function () {
+            const base = this._getWorkflowBaseURL();
+            const taskId = this.getModel("task").getData().InstanceID;
+
+            const res = await fetch(`${base}/task-instances/${taskId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    status: "COMPLETED"
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error("Workflow task completion failed");
+            }
+        },
+
+
+
+        _onApprove: async function () {
+            const view = this._getMainView();
+            const comments = view.getModel("commentModel")?.getData() ?? [];
+
+            if (!this._hasNewComment(comments)) {
+                MessageBox.information("Please add a comment before approving.");
+                return;
+            }
+
+            try {
+                // 1. Send to SAP
+                const result = await this._sendDataToSAP();   // { success, error }
+
+                // 2. Update CAP (Approved / Error)
+                await this._updateRequestAfterSAP(result);
+
+                // 3. Save comments
+                await this._addApproveComment();
+
+                // 4. Complete workflow
+                await this._completeWorkflowTask();
+
+                MessageBox.success("Request approved.");
+                this._refreshInbox();
+
+            } catch (e) {
+                MessageBox.error(e.message || "Approve failed");
+            }
+        },
+
+        _onReject: async function () {
+            const view = this._getMainView();
+            const comments = view.getModel("commentModel")?.getData() ?? [];
+
+            if (!this._hasNewComment(comments)) {
+                MessageBox.information("Please add a comment before rejecting.");
+                return;
+            }
+
+            try {
+                // 1. Update CAP (Rejected)
+                await this._updateRequestStatus("Rejected", "Rejected");
+
+                // 2. Save comments
+                await this._addApproveComment();
+
+                // 3. Complete workflow
+                await this._completeWorkflowTask();
+
+                MessageBox.error("Request rejected.");
+                this._refreshInbox();
+
+            } catch (e) {
+                MessageBox.error(e.message || "Reject failed");
+            }
+        },
 
     });
 });
