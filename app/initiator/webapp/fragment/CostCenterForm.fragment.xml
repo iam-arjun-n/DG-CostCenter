@@ -59,7 +59,6 @@
                                        value="{DataModel>/costCenter}"
                                        change="validateCostCenter"
                                        liveChange="validateCostCenter"
-                                       showValueHelp="true"
                                        valueHelpRequest="onValueHelpRequestCostCenter"/>
 
                                 <Toolbar id="CCForm_Toolbar2" visible="false"/>
@@ -117,6 +116,7 @@
                                 <core:Title id="CCForm_Title10"/>
                                 <Label id="CCForm_Label5" text="Description" labelFor="description"/>
                                 <Input id="description"
+                                required="true"
                                        value="{DataModel>/description}"
                                        change="validateDescription"
                                        liveChange="validateDescription"/>

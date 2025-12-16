@@ -52,7 +52,7 @@ modules:
       keep-existing-routes: false
       memory: 256M
       routes:
-        - route: dg-costcenter-dev.cfapps.eu10-004.hana.ondemand.com
+        - host: dg-costcenter-dev
 
   - name: DG-CostCenter-app-deployer
     type: com.sap.application.content

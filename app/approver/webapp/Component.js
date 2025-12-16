@@ -274,27 +274,123 @@ ${JSON.stringify({
 
 
         //Approve or Reject Logic
+        _createCostCentersInS4: function (costCenters) {
+            const oModel = this.getModel("CreateCostCenterModel");
+
+            function format(dateStr) {
+                const d = new Date(dateStr);
+                return d.toISOString().slice(0, 10).replace(/-/g, "");
+            }
+
+            return new Promise((resolve, reject) => {
+                let completed = 0;
+                const total = costCenters.length;
+                let failed = false;
+
+                costCenters.forEach(cc => {
+                    if (failed) {
+                        return;
+                    }
+
+                    const payload = {
+                        COAREA: cc.controllingArea,
+                        COSTCENTER: cc.costCenter,
+                        VALIDFROM: format(cc.validFrom),
+                        VALIDTO: "99991231",
+                        NAME: cc.name,
+                        DESCRIPTION: cc.description,
+                        CURRENCY: cc.currency,
+                        COSTCTR_HIER: cc.hierarchyArea,
+                        PERSON_INCHARGE: cc.personResponsible,
+                        COSTCENTERTYPE: cc.costCenterCategory,
+                        COMPCODE: cc.companyCode,
+                        PROFITCTR: cc.profitCenter,
+                        USER_RESPONSIBLE: cc.userResponsible,
+                        DEPARTMENT: cc.department
+                    };
+
+                    // flags
+                    if (cc.actualRevenue) payload.LOCKACT_REVENUES = "X";
+                    if (cc.planRevenue) payload.LOCKPLAN_REVENUES = "X";
+                    if (cc.recordQuantity) payload.REC_QUANTITY = "X";
+                    if (cc.commitmentUpdate) payload.COMMIT_UPDATE = "X";
+
+                    // optional string fields
+                    if (cc.businessArea) payload.BUSINESS_AREA = cc.businessArea;
+
+
+                    console.log("Payload for S/4 Create:", payload);
+
+                    oModel.create("/ETY_COSTCREATESet", payload, {
+                        success: () => {
+                            if (failed) {
+                                return;
+                            }
+
+                            completed++;
+                            if (completed === total) {
+                                resolve({ success: true });
+                            }
+                        },
+
+                        error: (oError) => {
+                            if (failed) {
+                                return;
+                            }
+                            failed = true;
+
+                            console.error("RAW ERROR OBJECT:", oError);
+
+                            let message = "Unknown backend error";
+
+                            try {
+                                // SAP Gateway standard error format
+                                const response = JSON.parse(oError.responseText);
+
+                                message =
+                                    response?.error?.message?.value ||
+                                    response?.error?.innererror?.errordetails?.[0]?.message ||
+                                    message;
+
+                            } catch (e) {
+                                // fallback to UI5 message if JSON parsing fails
+                                if (oError.message) {
+                                    message = oError.message;
+                                }
+                            }
+
+                            reject({
+                                success: false,
+                                error: message, 
+                            });
+                        }
+
+                    });
+                });
+            });
+        },
 
 
         _sendDataToSAP: async function () {
 
-            const ctxModel = this.getModel("context");
-            const reqType = ctxModel.getProperty("/RequestType");   // "Create" | "Change" | "Extend"
+            const view = this._getMainView();
+            const mainModel = view.getModel();  // the one you set inside loadCAP
+            const reqType = mainModel.getProperty("/RequestType");
+            const costCenters = mainModel.getProperty("/costCenterData");
+
 
             let success = false;
             let error = "";
 
             try {
                 if (reqType === "Create") {
-                    // TODO: Batch POST to S/4 (leave space)
-                    success = true;
+                    return await this._createCostCentersInS4(costCenters);
                 } else if (reqType === "Change" || reqType === "Extend") {
-                    // TODO: PATCH to S/4 (leave space)
                     success = true;
                 }
             } catch (e) {
                 success = false;
-                error = e.message;
+                error = e.error || e.message || "Unknown SAP error";
             }
 
             return { success, error };
@@ -414,6 +510,14 @@ ${JSON.stringify({
 
                 // 4. Complete workflow
                 await this._completeWorkflowTask();
+
+                if (!result.success) {
+                    MessageBox.error(
+                        `SAP Posting Failed:\n${result.error}`,
+                        { title: "Posting Error" }
+                    );
+                    return;
+                }
 
                 MessageBox.success("Request approved.");
                 this._refreshInbox();
