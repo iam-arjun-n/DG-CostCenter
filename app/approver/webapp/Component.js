@@ -293,31 +293,37 @@ ${JSON.stringify({
                     }
 
                     const payload = {
-                        COAREA: cc.controllingArea,
-                        COSTCENTER: cc.costCenter,
+                        COAREA: cc.controllingArea || "",
+                        COSTCENTER: cc.costCenter || "",
                         VALIDFROM: format(cc.validFrom),
                         VALIDTO: "99991231",
-                        NAME: cc.name,
-                        DESCRIPTION: cc.description,
-                        CURRENCY: cc.currency,
-                        COSTCTR_HIER: cc.hierarchyArea,
-                        PERSON_INCHARGE: cc.personResponsible,
-                        COSTCENTERTYPE: cc.costCenterCategory,
-                        COMPCODE: cc.companyCode,
-                        PROFITCTR: cc.profitCenter,
-                        USER_RESPONSIBLE: cc.userResponsible,
-                        DEPARTMENT: cc.department
+
+                        NAME: cc.name || "",
+                        DESCRIPTION: cc.description || "",
+                        CURRENCY: cc.currency || "",
+
+                        COSTCTR_HIER: cc.hierarchyArea || "",
+                        PERSON_INCHARGE: cc.personResponsible || "",
+                        COSTCENTERTYPE: cc.costCenterCategory || "",
+
+                        COMPCODE: cc.companyCode || "",
+                        PROFITCTR: cc.profitCenter || "",
+
+                        USER_RESPONSIBLE: cc.userResponsible || "",
+                        DEPARTMENT: cc.department || "",
+                        BUSINESS_AREA: cc.businessArea || "",
+
+                        LOCKACT_PRIMCOST: cc.actualPrimaryCosts ? "X" : "",
+                        LOCKPLAN_PRIMCOST: cc.planPrimaryCosts ? "X" : "",
+                        LOCKACT_SECCOST: cc.actualSecondaryCosts ? "X" : "",
+                        LOCKPLAN_SECCOST: cc.planSecondaryCosts ? "X" : "",
+
+                        LOCKACT_REVENUES: cc.actualRevenue ? "X" : "",
+                        LOCKPLAN_REVENUES: cc.planRevenue ? "X" : "",
+
+                        REC_QUANTITY: cc.recordQuantity ? "X" : "",
+                        COMMIT_UPDATE: cc.commitmentUpdate ? "X" : ""
                     };
-
-                    // flags
-                    if (cc.actualRevenue) payload.LOCKACT_REVENUES = "X";
-                    if (cc.planRevenue) payload.LOCKPLAN_REVENUES = "X";
-                    if (cc.recordQuantity) payload.REC_QUANTITY = "X";
-                    if (cc.commitmentUpdate) payload.COMMIT_UPDATE = "X";
-
-                    // optional string fields
-                    if (cc.businessArea) payload.BUSINESS_AREA = cc.businessArea;
-
 
                     console.log("Payload for S/4 Create:", payload);
 
@@ -361,7 +367,7 @@ ${JSON.stringify({
 
                             reject({
                                 success: false,
-                                error: message, 
+                                error: message,
                             });
                         }
 
