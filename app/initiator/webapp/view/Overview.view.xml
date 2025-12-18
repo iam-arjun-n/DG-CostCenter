@@ -33,7 +33,7 @@
                         <fb:filterGroupItems>
                             <fb:FilterGroupItem id="Overview_FilterGroupItem2" groupName="g1" name="A" label="Request ID" visibleInFilterBar="true">
                                 <fb:control>
-                                    <MultiInput name="Request ID" id="Request_Id" valueHelpRequest="REQHelp" submit="onRequestIdSubmit" >
+                                    <MultiInput name="Request ID" id="Request_Id" valueHelpRequest="onValueHelpRequestRequestId" submit="onRequestIdSubmit" >
                                     </MultiInput>
                                 </fb:control>
                             </fb:FilterGroupItem>
@@ -63,7 +63,7 @@
                             </fb:FilterGroupItem>    
                             <fb:FilterGroupItem id="Overview_FilterGroupItem7" groupName="g1" name="D" label="Created By" visibleInFilterBar="true">
                                 <fb:control>
-                                     <MultiInput name="Request Status" id="Created_By" valueHelpRequest="REQHelpCreatedBy" submit="onCreatedBySubmit"  editable="true">
+                                     <MultiInput name="Request Status" id="Created_By" valueHelpRequest="onValueHelpRequestCreatedBy" submit="onCreatedBySubmit"  editable="true">
                                     </MultiInput>
                                 </fb:control>
                             </fb:FilterGroupItem>

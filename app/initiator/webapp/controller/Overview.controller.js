@@ -126,6 +126,8 @@ sap.ui.define([
             oDate.setSecondDateValue(null);
 
             this.byId("Overview_Table").getBinding("items").filter([]);
+            var oTable = this.byId("Overview_Table");
+            var oBinding = oTable.getBinding("items");
             oBinding.filter([]);
 
             oBinding.changeParameters({
@@ -217,8 +219,164 @@ sap.ui.define([
                 request_type: "view",
                 request_id: this._sSelectedRequestId
             });
+        },
+
+        _openF4Dialog: function (title) {
+
+            if (!this._F4Dialog) {
+                Fragment.load({
+                    id: this.getView().getId(),
+                    name: "com.deloitte.mdg.costcenter.initiator.initiator.fragment.F4Dialog",
+                    controller: this
+                }).then((oDialog) => {
+                    this._F4Dialog = oDialog;
+                    this.getView().addDependent(oDialog);
+                    oDialog.setTitle(title);
+                    oDialog.open();
+                });
+            } else {
+                this._F4Dialog.setTitle(title);
+                this._F4Dialog.open();
+            }
+        },
+
+        onF4Search: function (oEvent) {
+            const sValue = oEvent.getParameter("newValue");
+
+            const oList = this.byId("F4List");
+            const oBinding = oList.getBinding("items");
+
+            const oFilter = new sap.ui.model.Filter({
+                filters: [
+                    new sap.ui.model.Filter("title", sap.ui.model.FilterOperator.Contains, sValue),
+                    new sap.ui.model.Filter("description", sap.ui.model.FilterOperator.Contains, sValue)
+                ],
+                and: false
+            });
+
+            oBinding.filter([oFilter]);
+        },
+        onF4Select: function (oEvent) {
+            const oItem = oEvent.getParameter("listItem");
+            if (!oItem) {
+                return;
+            }
+
+            const sValue = oItem.getTitle();
+            const oInput = sap.ui.getCore().byId(this._currentInputId);
+
+            if (oInput && oInput.addToken) {
+                const exists = oInput.getTokens().some(t => t.getText() === sValue);
+                if (!exists) {
+                    oInput.addToken(new sap.m.Token({ text: sValue }));
+                }
+            }
+
+            // reset search + list
+            const oSearch = this.byId("F4SearchField");
+            const oList = this.byId("F4List");
+
+            if (oSearch) {
+                oSearch.setValue("");
+            }
+            if (oList) {
+                oList.getBinding("items").filter([]);
+            }
+
+            this._F4Dialog.close();
+        },
+
+        onF4Cancel: function () {
+            this._F4Dialog.close();
+        },
+
+
+        onValueHelpRequestRequestId: async function (oEvent) {
+            sap.ui.core.BusyIndicator.show();
+            this._currentInputId = oEvent.getSource().getId();
+
+            try {
+                const oModel = this.getOwnerComponent().getModel("ServiceModel");
+
+                const oListBinding = oModel.bindList(
+                    "/CostCenterRequests",
+                    null,
+                    null,
+                    null,
+                    { $select: "requestId" }
+                );
+
+                const aContexts = await oListBinding.requestContexts(0, 1000);
+
+                const map = {};
+                aContexts.forEach(ctx => {
+                    const id = ctx.getObject().requestId;
+                    if (id) {
+                        map[id] = true;
+                    }
+                });
+
+                const formatted = Object.keys(map).map(id => ({
+                    title: id,
+                    description: "Request ID"
+                }));
+
+                this.getView().setModel(
+                    new sap.ui.model.json.JSONModel({ results: formatted }),
+                    "F4Model"
+                );
+
+                this._openF4Dialog("Request ID");
+
+            } catch (e) {
+                sap.m.MessageBox.error("Failed to load Request IDs");
+            } finally {
+                sap.ui.core.BusyIndicator.hide();
+            }
+        },
+
+        onValueHelpRequestCreatedBy: async function (oEvent) {
+            sap.ui.core.BusyIndicator.show();
+            this._currentInputId = oEvent.getSource().getId();
+
+            try {
+                const oModel = this.getOwnerComponent().getModel("ServiceModel");
+
+                const oListBinding = oModel.bindList(
+                    "/CostCenterRequests",
+                    null,
+                    null,
+                    null,
+                    { $select: "createdBy" }
+                );
+
+                const aContexts = await oListBinding.requestContexts(0, 1000);
+
+                const map = {};
+                aContexts.forEach(ctx => {
+                    const user = ctx.getObject().createdBy;
+                    if (user) {
+                        map[user] = true;
+                    }
+                });
+
+                const formatted = Object.keys(map).map(user => ({
+                    title: user,
+                    description: "Created By"
+                }));
+
+                this.getView().setModel(
+                    new sap.ui.model.json.JSONModel({ results: formatted }),
+                    "F4Model"
+                );
+
+                this._openF4Dialog("Created By");
+
+            } catch (e) {
+                sap.m.MessageBox.error("Failed to load Created By values");
+            } finally {
+                sap.ui.core.BusyIndicator.hide();
+            }
         }
-
-
     });
 });
