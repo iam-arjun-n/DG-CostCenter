@@ -101,6 +101,7 @@ sap.ui.define([
                     "$select": [
                         "ControllingArea",
                         "CostCenter",
+                        "ValidityEndDate",
                         "ValidityStartDate",
                         "CompanyCode",
                         "BusinessArea",
@@ -127,6 +128,7 @@ sap.ui.define([
                 controllingArea: oData.ControllingArea,
                 costCenter: oData.CostCenter,
                 validFrom: this.formatForDB(oData.ValidityStartDate),
+                validTo: this.formatForDB(oData.ValidityEndDate),
                 name: oText.CostCenterName,
                 description: oText.CostCenterDescription,
                 userResponsible: oData.CostCtrResponsibleUser,
@@ -190,8 +192,7 @@ sap.ui.define([
                         "Submission_Column_Description",
                     ],
                     buttons: [
-                        "Submission_Button_View",
-                        "Submission_Button_ChangeLog"
+                        "Submission_Button_View"
                     ]
                 }
             };
