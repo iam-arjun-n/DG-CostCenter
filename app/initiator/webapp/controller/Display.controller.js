@@ -144,33 +144,43 @@ sap.ui.define([
 
         //F4 For Functions
         onValueHelpRequest: function (oEvent) {
-            this._currentInputId = oEvent.getSource().getId();
             sap.ui.core.BusyIndicator.show();
+            const inputId = oEvent.getSource().getId().split("--").pop();
+            this._currentInputId = oEvent.getSource().getId();
 
             const oModel = this.getOwnerComponent().getModel("CostCenterModel");
 
             oModel.read("/A_CostCenter", {
                 urlParameters: {
                     "$expand": "to_Text",
-                    "$select": ["CostCenter,CostCtrResponsiblePersonName,to_Text/CostCenterName,to_Text/CostCenterDescription"].join(",")
+                    "$select": "CostCenter,CostCtrResponsiblePersonName," +
+                        "to_Text/CostCenterName," +
+                        "to_Text/CostCenterDescription," +
+                        "to_Text/Language"
                 },
+
                 success: (oData) => {
                     const map = {};
-                    const inputId = this._currentInputId;
 
-                    oData.results.forEach(r => {
+                    oData.results.forEach((r, idx) => {
+                        const texts = (r.to_Text?.results || [])
+                            .filter(t => t.Language === "EN");
+
                         let value;
 
                         switch (inputId) {
                             case "MultiInput_CostCenter":
                                 value = r.CostCenter;
                                 break;
+
                             case "MultiInput_Name":
-                                value = r.to_Text?.results?.[0]?.CostCenterName;
+                                value = texts[0]?.CostCenterName;
                                 break;
+
                             case "MultiInput_Description":
-                                value = r.to_Text?.results?.[0]?.CostCenterDescription;
+                                value = texts[0]?.CostCenterDescription;
                                 break;
+
                             case "MultiInput_PersonResponsible":
                                 value = r.CostCtrResponsiblePersonName;
                                 break;
@@ -186,22 +196,27 @@ sap.ui.define([
                         description: v
                     }));
 
-                    this.getView().setModel(
-                        new sap.ui.model.json.JSONModel({ results: formatted }),
-                        "F4Model"
-                    );
+                    const oF4Model = new sap.ui.model.json.JSONModel({
+                        results: formatted
+                    });
+
+                    this._f4Model = oF4Model;
+                    this.getView().setModel(oF4Model, "F4Model");
 
                     this._openF4Dialog("Select Value");
                     sap.ui.core.BusyIndicator.hide();
                 },
-                error: () => {
+
+                error: (e) => {
                     sap.ui.core.BusyIndicator.hide();
+                    console.error("F4 read failed", e);
                     sap.m.MessageBox.error("Failed to load value help");
                 }
             });
         },
 
         _openF4Dialog: function (title) {
+
             if (!this._F4Dialog) {
                 sap.ui.core.Fragment.load({
                     id: this.getView().getId(),
@@ -209,11 +224,15 @@ sap.ui.define([
                     controller: this
                 }).then(oDialog => {
                     this._F4Dialog = oDialog;
+                    oDialog.setModel(this._f4Model, "F4Model");
+
                     this.getView().addDependent(oDialog);
                     oDialog.setTitle(title);
                     oDialog.open();
                 });
+
             } else {
+                this._F4Dialog.setModel(this._f4Model, "F4Model");
                 this._F4Dialog.setTitle(title);
                 this._F4Dialog.open();
             }
