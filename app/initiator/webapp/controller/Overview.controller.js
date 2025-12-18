@@ -8,8 +8,9 @@ sap.ui.define([
     "sap/m/MessageBox",
     "sap/ui/model/json/JSONModel",
     "sap/ui/export/Spreadsheet",
-    "com/deloitte/mdg/costcenter/initiator/initiator/model/formatter"
-], function (Controller, Fragment, Filter, FilterOperator, FilterType, Token, MessageBox, JSONModel, Spreadsheet, formatter) {
+    "com/deloitte/mdg/costcenter/initiator/initiator/model/formatter",
+    "sap/ui/model/odata/v4/ODataUtils"
+], function (Controller, Fragment, Filter, FilterOperator, FilterType, Token, MessageBox, JSONModel, Spreadsheet, formatter, ODataUtils) {
     "use strict";
 
     return Controller.extend("com.deloitte.mdg.costcenter.initiator.initiator.controller.Overview", {
@@ -17,7 +18,7 @@ sap.ui.define([
         formatter: formatter,
 
         onInit: function () {
-            this._oModel = this.getView().getModel("costCenterModel");
+            this._oModel = this.getView().getModel("ServiceModel");
             this._addCurrentUserToken();
         },
 
@@ -30,57 +31,106 @@ sap.ui.define([
             }
         },
 
+        onRequestIdSubmit: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue().trim();
+
+            if (sValue) {
+                oInput.addToken(new sap.m.Token({ text: sValue }));
+                oInput.setValue("");
+            }
+        },
+
+        onCreatedBySubmit: function (oEvent) {
+            var oInput = oEvent.getSource();
+            var sValue = oInput.getValue().trim();
+
+            if (sValue) {
+                oInput.addToken(new sap.m.Token({ text: sValue }));
+                oInput.setValue("");
+            }
+        },
+
+
         onGo: function () {
             var oTable = this.byId("Overview_Table");
             var oBinding = oTable.getBinding("items");
             var aFilters = [];
 
-            var sGlobalSearch = this.byId("Request_Id").getValue();
-            if (sGlobalSearch) {
-                var aGlobalFilters = [
-                    new Filter("requestId", FilterOperator.Contains, sGlobalSearch),
-                    new Filter("requestType", FilterOperator.Contains, sGlobalSearch),
-                    new Filter("workflowStatus", FilterOperator.Contains, sGlobalSearch),
-                    new Filter("createdBy", FilterOperator.Contains, sGlobalSearch)
-                ];
-                aFilters.push(new Filter({ filters: aGlobalFilters, and: false }));
+            // Request ID
+            var aReqTokens = this.byId("Request_Id").getTokens();
+            if (aReqTokens.length) {
+                aFilters.push(new Filter({
+                    filters: aReqTokens.map(t =>
+                        new Filter("requestId", FilterOperator.EQ, t.getText())
+                    ),
+                    and: false
+                }));
             }
 
+            // Created By
+            var aUserTokens = this.byId("Created_By").getTokens();
+            if (aUserTokens.length) {
+                aFilters.push(new Filter({
+                    filters: aUserTokens.map(t =>
+                        new Filter("createdBy", FilterOperator.EQ, t.getText())
+                    ),
+                    and: false
+                }));
+            }
+
+            // Request Type
             var sReqType = this.byId("Request_Type").getSelectedKey();
             if (sReqType) {
                 aFilters.push(new Filter("requestType", FilterOperator.EQ, sReqType));
             }
 
-            var sWFStatus = this.byId("Workflow_Status").getSelectedKey();
-            if (sWFStatus) {
-                aFilters.push(new Filter("workflowStatus", FilterOperator.EQ, sWFStatus));
+            // Workflow Status
+            var sWF = this.byId("Workflow_Status").getSelectedKey();
+            if (sWF) {
+                aFilters.push(new Filter("workflowStatus", FilterOperator.EQ, sWF));
             }
 
-            var oCreatedBy = this.byId("Overview_Created_By");
-            var aTokens = oCreatedBy.getTokens();
-            if (aTokens.length > 0) {
-                var aCreatedByFilters = aTokens.map(function (token) {
-                    return new Filter("createdBy", FilterOperator.Contains, token.getText());
+            oBinding.filter(aFilters);
+            var oStart = this.byId("Creation_Date").getDateValue();
+            var oEnd = this.byId("Creation_Date").getSecondDateValue();
+
+            if (oStart && oEnd) {
+                oStart.setHours(0, 0, 0, 0);
+                oEnd.setHours(23, 59, 59, 999);
+
+                var sFilter =
+                    "createdAt ge " + oStart.toISOString() +
+                    " and createdAt le " + oEnd.toISOString();
+
+                oBinding.changeParameters({
+                    $filter: sFilter
                 });
-                aFilters.push(new Filter({ filters: aCreatedByFilters, and: false }));
+            } else {
+                // clear date filter
+                oBinding.changeParameters({
+                    $filter: undefined
+                });
             }
-
-            var oDateRangeStart = this.byId("Creation_Date").getDateValue();
-            var oDateRangeEnd = this.byId("Creation_Date").getSecondDateValue();
-            if (oDateRangeStart && oDateRangeEnd) {
-                aFilters.push(new Filter("createdAt", FilterOperator.BT, oDateRangeStart, oDateRangeEnd));
-            }
-
-            oBinding.filter(aFilters, FilterType.Application);
         },
 
         onClear: function () {
-            this.byId("Request_Id").setValue("");
+            this.byId("Request_Id").destroyTokens();
+            this.byId("Created_By").destroyTokens();
+
             this.byId("Request_Type").setSelectedKey("");
             this.byId("Workflow_Status").setSelectedKey("");
-            var oCreatedBy = this.byId("Overview_Created_By");
-            oCreatedBy.destroyTokens();
-            this.byId("Creation_Date").setValue("");
+
+            var oDate = this.byId("Creation_Date");
+            oDate.setDateValue(null);
+            oDate.setSecondDateValue(null);
+
+            this.byId("Overview_Table").getBinding("items").filter([]);
+            oBinding.filter([]);
+
+            oBinding.changeParameters({
+                $filter: undefined
+            });
         },
 
         onRequestPress: function (oEvent) {

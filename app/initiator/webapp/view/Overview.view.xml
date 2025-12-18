@@ -33,7 +33,7 @@
                         <fb:filterGroupItems>
                             <fb:FilterGroupItem id="Overview_FilterGroupItem2" groupName="g1" name="A" label="Request ID" visibleInFilterBar="true">
                                 <fb:control>
-                                    <MultiInput name="Request ID" id="Request_Id" valueHelpRequest="REQHelp" >
+                                    <MultiInput name="Request ID" id="Request_Id" valueHelpRequest="REQHelp" submit="onRequestIdSubmit" >
                                     </MultiInput>
                                 </fb:control>
                             </fb:FilterGroupItem>
@@ -42,9 +42,9 @@
                                     <Select xmlns="sap.m" id="Request_Type" forceSelection="false">
                                         <items>
                                             <core:Item id="Overview_Item1"  xmlns:core="sap.ui.core" key="" text=""/>
-                                            <core:Item id="Overview_Item2"  xmlns:core="sap.ui.core" key="CR" text="Create"/>
-                                            <core:Item id="Overview_Item3"  xmlns:core="sap.ui.core" key="CH" text="Change"/> 
-                                            <core:Item id="Overview_Item4"  xmlns:core="sap.ui.core" key="EX" text="Extend"/>
+                                            <core:Item id="Overview_Item2"  xmlns:core="sap.ui.core" key="Create" text="Create"/>
+                                            <core:Item id="Overview_Item3"  xmlns:core="sap.ui.core" key="Change" text="Change"/> 
+                                            <core:Item id="Overview_Item4"  xmlns:core="sap.ui.core" key="Extend" text="Extend"/>
                                         </items>
                                     </Select>
                                 </fb:control>
@@ -54,16 +54,16 @@
                                     <Select xmlns="sap.m" id="Workflow_Status" forceSelection="false">
                                         <items>
                                             <core:Item id="Overview_Item5"  xmlns:core="sap.ui.core" key="" text=""/>
-                                            <core:Item id="Overview_Item6"  xmlns:core="sap.ui.core" key="I" text="In Approval"/>
-                                            <core:Item id="Overview_Item7"  xmlns:core="sap.ui.core" key="C" text="Completed"/>
-                                            <core:Item id="Overview_Item8"  xmlns:core="sap.ui.core" key="R" text="Rejected"/>
+                                            <core:Item id="Overview_Item6"  xmlns:core="sap.ui.core" key="In Approval" text="In Approval"/>
+                                            <core:Item id="Overview_Item7"  xmlns:core="sap.ui.core" key="Completed" text="Completed"/>
+                                            <core:Item id="Overview_Item8"  xmlns:core="sap.ui.core" key="Rejected" text="Rejected"/>
                                         </items>
                                     </Select>
                                 </fb:control>
                             </fb:FilterGroupItem>    
                             <fb:FilterGroupItem id="Overview_FilterGroupItem7" groupName="g1" name="D" label="Created By" visibleInFilterBar="true">
                                 <fb:control>
-                                     <MultiInput name="Request Status" id="Created_By" valueHelpRequest="REQHelpCreatedBy"  editable="true">
+                                     <MultiInput name="Request Status" id="Created_By" valueHelpRequest="REQHelpCreatedBy" submit="onCreatedBySubmit"  editable="true">
                                     </MultiInput>
                                 </fb:control>
                             </fb:FilterGroupItem>
