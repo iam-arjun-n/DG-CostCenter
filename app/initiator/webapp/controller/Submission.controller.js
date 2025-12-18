@@ -844,12 +844,21 @@ sap.ui.define([
             const oInput = sap.ui.getCore().byId(this._currentInputId);
             if (oInput) {
                 oInput.setValue(sValue);
-                const sPath = oInput.getBinding("value").getPath();
-                const oModel = oInput.getModel("DataModel");
-                oModel.setProperty(sPath, sValue);
 
-                // 3️⃣ recheck tabs enabling
-                this._checkInitialFilled();
+                const oBinding = oInput.getBinding("value");
+                if (oBinding) {
+                    oBinding.getModel().setProperty(oBinding.getPath(), sValue);
+                }
+            }
+
+            const oSearch = this.byId("F4SearchField");
+            const oList = this.byId("F4List");
+
+            if (oSearch) {
+                oSearch.setValue("");
+            }
+            if (oList) {
+                oList.getBinding("items").filter([]);
             }
 
             this._F4Dialog.close();
