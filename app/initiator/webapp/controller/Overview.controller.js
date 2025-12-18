@@ -104,9 +104,18 @@ sap.ui.define([
 
         onRequestSelectionChange: function (oEvent) {
             var oItem = oEvent.getParameter("listItem");
-            if (!oItem) return;
-            var oCtx = oItem.getBindingContext("costCenterModel");
-            console.log("Selected Request:", oCtx.getProperty("requestId"));
+            var oViewButton = this.byId("Overview_Button_View");
+
+            if (!oItem) {
+                oViewButton.setEnabled(false);
+                this._sSelectedRequestId = null;
+                return;
+            }
+
+            var oCtx = oItem.getBindingContext("ServiceModel");
+            this._sSelectedRequestId = oCtx.getProperty("requestId");
+
+            oViewButton.setEnabled(true);
         },
 
         onExport: function () {
@@ -146,7 +155,20 @@ sap.ui.define([
         onChangeExtendPress: function () {
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.navTo("RouteDisplay");
+        },
+        viewRequest: function () {
+            if (!this._sSelectedRequestId) {
+                MessageBox.warning("Please select a request first.");
+                return;
+            }
+
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.navTo("RouteSubmission", {
+                request_type: "view",
+                request_id: this._sSelectedRequestId
+            });
         }
+
 
     });
 });

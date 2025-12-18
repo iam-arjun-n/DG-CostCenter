@@ -35,22 +35,59 @@ sap.ui.define([
         _onRouteMatched: function (oEvent) {
             var args = oEvent.getParameter("arguments");
             var sType = args.request_type || "create";
+            var sReqId = args.request_id;
             var sFormatted = sType.charAt(0).toUpperCase() + sType.slice(1);
 
             this.getView().getModel("DraftModel").setProperty("/requestType", sFormatted);
             this._applyVisibility(sFormatted);
-
-            // set createdByName from user info (async)
+            if (sType === "view" && sReqId) {
+                this._loadRequestFromCAP(sReqId);
+                return;
+            }
             this.getUserInfo().then((u) => {
-                // store both email and displayName if possible
+
                 this.getView().getModel("DraftModel").setProperty("/createdByName", u.displayName || u.email || u.name || u);
             }).catch(() => {
-                // ignore - mock already handled in getUserInfo
             });
 
             if (args.ca && args.cc && args.ve) {
                 this._loadSAPCostCenter(args.ca, args.cc, args.ve);
             }
+        },
+
+        _loadRequestFromCAP: function (reqId) {
+            var oModel = this.getOwnerComponent().getModel("ServiceModel");
+
+            var oContext = oModel.bindContext(
+                `/CostCenterRequests(requestId='${reqId}')`,
+                null,
+                { $expand: "costCenterData,comments" }
+            );
+
+            oContext.requestObject().then((oData) => {
+                var oDraft = this.getView().getModel("DraftModel");
+
+                oDraft.setData({
+                    requestId: oData.requestId,
+                    requestType: "View",
+                    workflowStatus: oData.workflowStatus,
+                    requestStatus: oData.requestStatus,
+                    createdByName: oData.createdByName,
+                    costCenterData: oData.costCenterData || []
+                });
+
+                // Comments → UI model
+                var aComments = (oData.comments || []).map(c => ({
+                    UserName: c.createdBy,
+                    Date: c.createdAt,
+                    Text: c.commentText
+                }));
+
+                this.getView().getModel("commentModel").setData(aComments);
+
+            }).catch((e) => {
+                MessageBox.error("Failed to load request " + reqId);
+            });
         },
 
         _loadSAPCostCenter: function (ca, cc, ve) {
@@ -118,7 +155,7 @@ sap.ui.define([
 
             var config = {
                 Create: {
-                    columns: ["Submission_Column_ControllingArea", "Submission_Column_CostCenter"],
+                    columns: ["Submission_Column_ControllingArea", "Submission_Column_CostCenter", "Submission_Column_Name", "Submission_Column_Description"],
                     buttons: [
                         "Submission_Button_Add", "Submission_Button_Delete",
                         "Submission_Button_Edit", "Submission_Button_View",
@@ -143,6 +180,18 @@ sap.ui.define([
                     buttons: [
                         "Submission_Button_Edit", "Submission_Button_View",
                         "Submission_Button_Send"
+                    ]
+                },
+                View: {
+                    columns: [
+                        "Submission_Column_ControllingArea",
+                        "Submission_Column_CostCenter",
+                        "Submission_Column_Name",
+                        "Submission_Column_Description",
+                    ],
+                    buttons: [
+                        "Submission_Button_View",
+                        "Submission_Button_ChangeLog"
                     ]
                 }
             };
