@@ -1218,19 +1218,33 @@ sap.ui.define([
             // Update model with new message list
             oModel.setProperty("/messages", aMessages);
         },
+        _clearMandatoryErrorIfFilled: function (ctrl) {
+            if (ctrl.getRequired && ctrl.getRequired()) {
+                const val = this._getValueFromCC(ctrl);
+                if (val && val.toString().trim()) {
+                    this._updateFieldError(ctrl, null);
+                }
+            }
+        },
+
 
         //Validation
         validateControllingArea: function (oEvent) {
-            this.onInputValueChange(oEvent)
+            const ctrl = oEvent.getSource();
+            this.onInputValueChange(oEvent);
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateCostCenter: function (oEvent) {
-            this.onInputValueChange(oEvent)
+            const ctrl = oEvent.getSource();
+            this.onInputValueChange(oEvent);
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateName: function (oEvent) {
             const ctrl = oEvent.getSource();
             const val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
 
             if (!/^[A-Za-z ]*$/.test(val)) {
                 this._updateFieldError(ctrl, "No special characters allowed");
@@ -1248,6 +1262,7 @@ sap.ui.define([
         validateDescription: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
 
             if (val.length > 40) {
                 this._updateFieldError(ctrl, "Description cannot exceed 40 characters");
@@ -1265,41 +1280,49 @@ sap.ui.define([
         validatePersonResponsible: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateDepartment: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateCostCenterCategory: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateHierarchyArea: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateCompanyCode: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateBusinessArea: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateCurrency: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
         validateProfileCenter: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
+            this._clearMandatoryErrorIfFilled(ctrl);
         },
 
     });

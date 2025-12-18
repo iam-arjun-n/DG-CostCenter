@@ -110,6 +110,7 @@
                                 <core:Title id="CCForm_Title4" text="Names"/>
                                 <Label id="CCForm_Label4" text="Name" labelFor="name"/>
                                 <Input id="name"
+                                required="true"
                                        value="{DataModel>/name}"
                                        change="validateName"
                                        liveChange="validateName"/>

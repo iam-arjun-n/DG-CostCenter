@@ -19,8 +19,8 @@ class CostCenterService extends cds.ApplicationService {
           table: hanaTable
         });
 
-        const next = await seq.getNextNumber();     // 1, 2, 3...
-        const padded = next.toString().padStart(7, "0");  // 0000001
+        const next = await seq.getNextNumber();   
+        const padded = next.toString().padStart(7, "0");  
 
         req.data.requestId = "CCTR" + padded;
         req.data.requestStatus = "Submitted";
