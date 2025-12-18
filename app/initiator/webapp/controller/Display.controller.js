@@ -9,7 +9,7 @@ sap.ui.define([
     return Controller.extend("com.deloitte.mdg.costcenter.initiator.initiator.controller.Display", {
 
         onInit: function () {
-
+            this._oTable = this.byId("Display_Table");
             this.loadData();
         },
         onNavBack: function () {
@@ -45,20 +45,25 @@ sap.ui.define([
         },
 
         onGoFilter: function () {
-            var aFilters = [];
-            var aCostCenters = this._getTokens("F_COSTCENTER");
-            var aNames = this._getTokens("F_NAME");
-            var aResp = this._getTokens("F_RESP");
+            const aFilters = [];
 
-            if (aCostCenters.length) {
-                aFilters.push(new Filter("CostCenter", FilterOperator.Contains, aCostCenters.join(",")));
-            }
-            if (aNames.length) {
-                aFilters.push(new Filter("CostCenterName", FilterOperator.Contains, aNames.join(",")));
-            }
-            if (aResp.length) {
-                aFilters.push(new Filter("CostCtrResponsiblePersonName", FilterOperator.Contains, aResp.join(",")));
-            }
+            const addMultiFilter = (sPath, aTokens) => {
+                if (!aTokens.length) return;
+
+                aFilters.push(
+                    new Filter({
+                        filters: aTokens.map(t =>
+                            new Filter(sPath, FilterOperator.Contains, t.getText())
+                        ),
+                        and: false
+                    })
+                );
+            };
+
+            addMultiFilter("CostCenter", this.byId("MultiInput_CostCenter").getTokens());
+            addMultiFilter("CostCenterName", this.byId("MultiInput_Name").getTokens());
+            addMultiFilter("CostCenterDescription", this.byId("MultiInput_Description").getTokens());
+            addMultiFilter("CostCtrResponsiblePersonName", this.byId("MultiInput_PersonResponsible").getTokens());
 
             this._oTable.getBinding("items").filter(aFilters);
         },
@@ -68,9 +73,11 @@ sap.ui.define([
         },
 
         onClearFilter: function () {
-            this.byId("F_COSTCENTER").removeAllTokens();
-            this.byId("F_NAME").removeAllTokens();
-            this.byId("F_RESP").removeAllTokens();
+            this.byId("MultiInput_CostCenter").removeAllTokens();
+            this.byId("MultiInput_Name").removeAllTokens();
+            this.byId("MultiInput_Description").removeAllTokens();
+            this.byId("MultiInput_PersonResponsible").removeAllTokens();
+
             this._oTable.getBinding("items").filter([]);
         },
 
@@ -133,6 +140,126 @@ sap.ui.define([
                 return oTextData.results[0].CostCenterDescription || "";
             }
             return "";
+        },
+
+        //F4 For Functions
+        onValueHelpRequest: function (oEvent) {
+            this._currentInputId = oEvent.getSource().getId();
+            sap.ui.core.BusyIndicator.show();
+
+            const oModel = this.getOwnerComponent().getModel("CostCenterModel");
+
+            oModel.read("/A_CostCenter", {
+                urlParameters: {
+                    "$expand": "to_Text",
+                    "$select": ["CostCenter,CostCtrResponsiblePersonName,to_Text/CostCenterName,to_Text/CostCenterDescription"].join(",")
+                },
+                success: (oData) => {
+                    const map = {};
+                    const inputId = this._currentInputId;
+
+                    oData.results.forEach(r => {
+                        let value;
+
+                        switch (inputId) {
+                            case "MultiInput_CostCenter":
+                                value = r.CostCenter;
+                                break;
+                            case "MultiInput_Name":
+                                value = r.to_Text?.results?.[0]?.CostCenterName;
+                                break;
+                            case "MultiInput_Description":
+                                value = r.to_Text?.results?.[0]?.CostCenterDescription;
+                                break;
+                            case "MultiInput_PersonResponsible":
+                                value = r.CostCtrResponsiblePersonName;
+                                break;
+                        }
+
+                        if (value) {
+                            map[value] = true;
+                        }
+                    });
+
+                    const formatted = Object.keys(map).map(v => ({
+                        title: v,
+                        description: v
+                    }));
+
+                    this.getView().setModel(
+                        new sap.ui.model.json.JSONModel({ results: formatted }),
+                        "F4Model"
+                    );
+
+                    this._openF4Dialog("Select Value");
+                    sap.ui.core.BusyIndicator.hide();
+                },
+                error: () => {
+                    sap.ui.core.BusyIndicator.hide();
+                    sap.m.MessageBox.error("Failed to load value help");
+                }
+            });
+        },
+
+        _openF4Dialog: function (title) {
+            if (!this._F4Dialog) {
+                sap.ui.core.Fragment.load({
+                    id: this.getView().getId(),
+                    name: "com.deloitte.mdg.costcenter.initiator.initiator.fragment.F4Dialog",
+                    controller: this
+                }).then(oDialog => {
+                    this._F4Dialog = oDialog;
+                    this.getView().addDependent(oDialog);
+                    oDialog.setTitle(title);
+                    oDialog.open();
+                });
+            } else {
+                this._F4Dialog.setTitle(title);
+                this._F4Dialog.open();
+            }
+        },
+
+        onF4Select: function (oEvent) {
+            const oItem = oEvent.getParameter("listItem");
+            if (!oItem) return;
+
+            const sValue = oItem.getTitle();
+            const oInput = sap.ui.getCore().byId(this._currentInputId);
+
+            if (oInput && oInput.addToken) {
+                const exists = oInput.getTokens().some(t => t.getText() === sValue);
+                if (!exists) {
+                    oInput.addToken(new sap.m.Token({ text: sValue }));
+                }
+            }
+
+            // reset dialog state
+            this.byId("F4SearchField").setValue("");
+            this.byId("F4List").getBinding("items").filter([]);
+
+            this._F4Dialog.close();
+        },
+        onF4Search: function (oEvent) {
+            const sValue = oEvent.getParameter("newValue");
+            const oList = this.byId("F4List");
+            const oBinding = oList.getBinding("items");
+
+            const oFilter = new sap.ui.model.Filter({
+                filters: [
+                    new sap.ui.model.Filter("title", sap.ui.model.FilterOperator.Contains, sValue),
+                    new sap.ui.model.Filter("description", sap.ui.model.FilterOperator.Contains, sValue)
+                ],
+                and: false
+            });
+
+            oBinding.filter([oFilter]);
+        },
+        onF4Cancel: function () {
+            this.byId("F4SearchField").setValue("");
+            this.byId("F4List").getBinding("items").filter([]);
+            this._F4Dialog.close();
         }
+
+
     });
 });
