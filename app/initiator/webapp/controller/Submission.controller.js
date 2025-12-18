@@ -492,8 +492,13 @@ sap.ui.define([
 
             var sType = this.getView().getModel("DraftModel").getProperty("/requestType");
 
-            sap.ui.core.UIComponent.getRouterFor(this)
-                .navTo(sType === "Create" ? "RouteOverview" : "RouteDisplay");
+            var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+
+            if (sType === "Create" || sType === "View") {
+                oRouter.navTo("RouteOverview");
+            } else {
+                oRouter.navTo("RouteDisplay");
+            }
         },
 
         formatForDB: function (dateObj) {
