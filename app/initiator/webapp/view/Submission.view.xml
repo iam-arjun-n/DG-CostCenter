@@ -42,17 +42,10 @@
                                 <content>
                                     <OverflowToolbar id="Submission_Header1" width="100%">
                                         <content>
-                                            <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_ileUploader" sameFilenameAllowed="true" 
+                                            <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_FileUploader" sameFilenameAllowed="true" 
                                                 iconOnly="false" buttonOnly="true" fileType="XLSX,xlsx" icon="sap-icon://upload" iconFirst="true" style="Emphasized" 
                                                 change="uploadFile" visible="false" />
-                                            <MenuButton id="Submission_Button_Export" text="Export/Download" buttonMode="Regular" icon="sap-icon://download" useDefaultActionOnly="true" type="Default">
-                                                <menu>
-                                                    <Menu id="Submission_Menu" itemSelected="onExportPress">
-                                                        <MenuItem id="Submission_MenuItem1" key="T" text="Download Template"/>
-                                                        <MenuItem id="Submission_MenuItem2" key="S" text="Export Entry"/>
-                                                    </Menu>
-                                                </menu>
-                                            </MenuButton>
+                                            <Button id="Submission_Button_Export" text="Download Template" icon="sap-icon://download" type="Default" press="onDownloadTemplate"/>
                                             <ToolbarSpacer id="Submission_Header2" />
                                             <Button id="Submission_Button_View" text="View" icon="sap-icon://detail-view" press="viewCostCenter" enabled="false" />
                                             <Button id="Submission_Button_ChangeLog" text="View Change logs" icon="sap-icon://notes" press="viewChangeLogs" enabled="false" />

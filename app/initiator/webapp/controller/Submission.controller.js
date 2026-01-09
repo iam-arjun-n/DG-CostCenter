@@ -161,7 +161,8 @@ sap.ui.define([
                     buttons: [
                         "Submission_Button_Add", "Submission_Button_Delete",
                         "Submission_Button_Edit", "Submission_Button_View",
-                        "Submission_Button_Send", "Submission_Button_Duplicatecheck"
+                        "Submission_Button_Send", "Submission_Button_Duplicatecheck",
+                        "Submission_FileUploader", "Submission_Button_Export"
                     ]
                 },
                 Change: {
@@ -208,7 +209,8 @@ sap.ui.define([
                 "Submission_Button_Edit", "Submission_Button_Delete",
                 "Submission_Button_View", "Submission_Button_ChangeLog",
                 "Submission_Button_Send", "Submission_Button_Duplicatecheck",
-                "Submission_Button_Validate"
+                "Submission_Button_Validate", "Submission_FileUploader",
+                "Submission_Button_Export"
             ];
 
             allColumns.concat(allButtons).forEach(function (id) {
@@ -1003,6 +1005,34 @@ sap.ui.define([
             });
         },
 
+        onValueHelpRequestPersonResponsible: function (oEvent) {
+            sap.ui.core.BusyIndicator.show();
+            this._currentInputId = oEvent.getSource().getId();
+
+            const oModel = this.getOwnerComponent().getModel("SAPModel");
+
+            oModel.read("/ZI_DDCOSTCENTER", {
+                success: (oData) => {
+                    const map = {};
+                    oData.results.forEach(item => map[item.verak] = item.verak);
+
+                    const formatted = Object.keys(map).map(key => ({
+                        title: key,
+                        description: "Person Responsible: " + key
+                    }));
+
+                    this.getView().setModel(new sap.ui.model.json.JSONModel({ results: formatted }), "F4Model");
+                    this._openF4Dialog("Person Responsible");
+
+                    sap.ui.core.BusyIndicator.hide();
+                },
+                error: (err) => {
+                    sap.ui.core.BusyIndicator.hide();
+                    sap.m.MessageBox.error("Failed to load Person Responsible: " + err.message);
+                }
+            });
+        },
+
         onValueHelpRequestProfitCenter: function (oEvent) {
             sap.ui.core.BusyIndicator.show();
             this._currentInputId = oEvent.getSource().getId();
@@ -1388,6 +1418,59 @@ sap.ui.define([
             var val = ctrl.getValue().trim();
             this._clearMandatoryErrorIfFilled(ctrl);
         },
+
+        //Mass Upload
+        onDownloadTemplate: function () {
+
+            const workbook = XLSX.utils.book_new();
+
+            // ---------- Sheet 1: Header Data ----------
+            let wsHeader = XLSX.utils.json_to_sheet([], {
+                header: [
+                    "Controlling Area",
+                    "Cost Center",
+                    "Valid From",
+                    "Valid To"
+                ]
+            });
+            XLSX.utils.book_append_sheet(workbook, wsHeader, "Header Data");
+
+            // ---------- Sheet 2: Basic Data ----------
+            let wsBasic = XLSX.utils.json_to_sheet([], {
+                header: [
+                    "Name",
+                    "Description",
+                    "User Responsible",
+                    "Person Responsible",
+                    "Department",
+                    "Cost Center Category",
+                    "Hierarchy Area",
+                    "Company Code",
+                    "Business Area",
+                    "Currency",
+                    "Profit Center"
+                ]
+            });
+            XLSX.utils.book_append_sheet(workbook, wsBasic, "Basic Data");
+
+            // ---------- Sheet 3: Control ----------
+            let wsControl = XLSX.utils.json_to_sheet([], {
+                header: [
+                    "Record Quantity",
+                    "Actual Primary Costs",
+                    "Actual Secondary Costs",
+                    "Plan Primary Costs",
+                    "Plan Secondary Costs",
+                    "Actual Revenue",
+                    "Plan Revenue",
+                    "Commitment Update"
+                ]
+            });
+            XLSX.utils.book_append_sheet(workbook, wsControl, "Control");
+
+            // ---------- Download ----------
+            XLSX.writeFile(workbook, "CostCenter_Template.xlsx");
+        }
 
     });
 });

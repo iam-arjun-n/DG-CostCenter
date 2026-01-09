@@ -133,7 +133,9 @@
                                        required="true"
                                        value="{DataModel>/personResponsible}"
                                        change="validatePersonResponsible"
-                                       liveChange="validatePersonResponsible"/>
+                                       liveChange="validatePersonResponsible"
+                                       showValueHelp="true"
+                                       valueHelpRequest="onValueHelpRequestPersonResponsible"/>
 
                                 <Label id="CCForm_Label8" text="Department" labelFor="department"/>
                                 <Input id="department"
