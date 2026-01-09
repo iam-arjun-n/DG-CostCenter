@@ -1420,15 +1420,6 @@ sap.ui.define([
         },
 
         //Mass Upload
-        // onDownloadTemplate: function () {
-        //     const sTemplate = "Cost Center Mass Upload Template.xlsx";
-        //     const sBasePath = "com/deloitte/mdg/costcenter/initiator/initiator/templates/";
-
-        //     sap.m.URLHelper.redirect(
-        //         sap.ui.require.toUrl(sBasePath + sTemplate),
-        //         true
-        //     );
-        // },
         onDownloadTemplate: function () {
             const sUrl = sap.ui.require.toUrl(
                 "com/deloitte/mdg/costcenter/initiator/initiator/templates/Cost Center Mass Upload Template.xlsx"
