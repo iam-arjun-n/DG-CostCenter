@@ -44,7 +44,7 @@
                                         <content>
                                             <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_FileUploader" sameFilenameAllowed="true" 
                                                 iconOnly="false" buttonOnly="true" fileType="XLSX,xlsx" icon="sap-icon://upload" iconFirst="true" style="Emphasized" 
-                                                change="uploadFile" visible="false" />
+                                                change="onExcelUpload" visible="false" />
                                             <Button id="Submission_Button_Export" text="Download Template" icon="sap-icon://download" type="Default" press="onDownloadTemplate"/>
                                             <ToolbarSpacer id="Submission_Header2" />
                                             <Button id="Submission_Button_View" text="View" icon="sap-icon://detail-view" press="viewCostCenter" enabled="false" />

@@ -190,8 +190,8 @@
                                 <Label id="CCForm_Label14" text="Profit Center" labelFor="profitCenter"/>
                                 <Input id="profitCenter"
                                        value="{DataModel>/profitCenter}"
-                                       change="validateProfileCenter"
-                                       liveChange="validateProfileCenter"
+                                       change="validateProfitCenter"
+                                       liveChange="validateProfitCenter"
                                        showValueHelp="true"
                                        valueHelpRequest="onValueHelpRequestProfitCenter"/>
 

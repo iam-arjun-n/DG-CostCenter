@@ -12,6 +12,12 @@ sap.ui.define([
     return Controller.extend("com.deloitte.mdg.costcenter.initiator.initiator.controller.Submission", {
 
         onInit: function () {
+            sap.ui.require(
+                ["com/deloitte/mdg/costcenter/initiator/initiator/libs/xlsx.full.min"],
+                function () {
+                    console.log("XLSX loaded:", window.XLSX);
+                }
+            );
             var oView = this.getView();
             var oDraftModel = new sap.ui.model.json.JSONModel({
                 requestId: "",
@@ -1413,7 +1419,7 @@ sap.ui.define([
             this._clearMandatoryErrorIfFilled(ctrl);
         },
 
-        validateProfileCenter: function (oEvent) {
+        validateProfitCenter: function (oEvent) {
             var ctrl = oEvent.getSource();
             var val = ctrl.getValue().trim();
             this._clearMandatoryErrorIfFilled(ctrl);
@@ -1431,10 +1437,181 @@ sap.ui.define([
             document.body.appendChild(oLink);
             oLink.click();
             document.body.removeChild(oLink);
+        },
+
+        onExcelUpload: function (oEvent) {
+            const file = oEvent.getParameter("files")[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: "array" });
+
+                    const sheetName = "Cost Center";
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    if (!worksheet) {
+                        MessageBox.error("Sheet 'Cost Center' not found in Excel.");
+                        return;
+                    }
+
+                    const rows = XLSX.utils.sheet_to_json(worksheet, {
+                        defval: "",
+                        raw: true
+                    });
+
+                    this._processCostCenterExcel(rows);
+
+                } catch (err) {
+                    MessageBox.error("Failed to read Excel file.");
+                    console.error(err);
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        },
+
+        _processCostCenterExcel: function (rows) {
+            const aValid = [];
+            const aErrors = [];
+
+            rows.forEach((row, index) => {
+                const rowNo = index + 2; // Excel row number (header = 1)
+                const errors = [];
+
+                // Mandatory fields
+                if (!row["Cost Center"]) errors.push("Cost Center is mandatory");
+                if (!row["Controlling Area"]) errors.push("Controlling Area is mandatory");
+                if (!row["Valid From"]) errors.push("Valid From is mandatory");
+                if (!row["Valid To"]) errors.push("Valid To is mandatory");
+                if (!row["Name"]) errors.push("Name is mandatory");
+                if (!row["Currency"]) errors.push("Currency is mandatory");
+
+                // Date validation
+                if (!this._isValidExcelDate(row["Valid From"])) {
+                    errors.push("Invalid Valid From date");
+                }
+                if (!this._isValidExcelDate(row["Valid To"])) {
+                    errors.push("Invalid Valid To date");
+                }
+
+                if (errors.length) {
+                    aErrors.push({
+                        row: rowNo,
+                        messages: errors
+                    });
+                    return;
+                }
+
+                // Map row → DraftModel structure
+                aValid.push(this._mapCostCenterRow(row));
+            });
+
+            if (aErrors.length) {
+                this._showExcelErrors(aErrors);
+                return;
+            }
+
+            this._setCostCenterExcelData(aValid);
+        },
+
+        _showExcelErrors: function (aErrors) {
+
+            let sMessage = aErrors.map(err =>
+                `Row ${err.row}:\n• ${err.messages.join("\n• ")}`
+            ).join("\n\n");
+
+            sap.m.MessageBox.error(
+                "Excel validation failed:\n\n" + sMessage
+            );
+        },
+
+        _mapCostCenterRow: function (row) {
+            return {
+                controllingArea: row["Controlling Area"],
+                costCenter: row["Cost Center"],
+                validFrom: this._formatExcelDate(row["Valid From"]),
+                validTo: this._formatExcelDate(row["Valid To"]),
+                name: row["Name"],
+                description: row["Description"],
+                userResponsible: row["User Responsible"],
+                personResponsible: row["Person Responsible"],
+                department: row["Department"],
+                costCenterCategory: row["Cost Center Category"],
+                hierarchyArea: row["Hierarchy Area"],
+                companyCode: row["Company Code"],
+                businessArea: row["Business Area"],
+                currency: row["Currency"],
+                profitCenter: row["Profit Center"],
+
+                // ✅ FIXED
+                recordQuantity: this._toBoolean(row["Record Quantity"]),
+                actualPrimaryCosts: this._toBoolean(row["Actual Primary Costs"]),
+                actualSecondaryCosts: this._toBoolean(row["Actual Secondary Costs"]),
+                planPrimaryCosts: this._toBoolean(row["Plan Primary Costs"]),
+                planSecondaryCosts: this._toBoolean(row["Plan Secondary Costs"]),
+                actualRevenue: this._toBoolean(row["Actual Revenue"]),
+                planRevenue: this._toBoolean(row["Plan Revenue"]),
+                commitmentUpdate: this._toBoolean(row["Commitment Update"])
+            };
+        },
+        _isValidExcelDate: function (value) {
+            if (!value) return false;
+
+            // Excel date number
+            if (typeof value === "number") {
+                return true;
+            }
+
+            // Already ISO string (yyyy-MM-dd)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return true;
+            }
+
+            return false;
+        },
+
+        _formatExcelDate: function (value) {
+
+            // Excel serial number → JS Date
+            if (typeof value === "number") {
+                const date = XLSX.SSF.parse_date_code(value);
+                const yyyy = date.y;
+                const mm = String(date.m).padStart(2, "0");
+                const dd = String(date.d).padStart(2, "0");
+                return `${yyyy}-${mm}-${dd}`; // UI5 DatePicker valueFormat
+            }
+
+            // Already ISO
+            if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                return value;
+            }
+
+            return null;
+        },
+
+
+        _setCostCenterExcelData: function (aData) {
+            const oDraftModel = this.getView().getModel("DraftModel");
+            const existing = oDraftModel.getProperty("/costCenterData") || [];
+
+            oDraftModel.setProperty("/costCenterData", existing.concat(aData));
+
+            MessageToast.show("Excel uploaded successfully (" + aData.length + " records)");
+        },
+        _toBoolean: function (v) {
+            if (typeof v === "boolean") return v;
+            if (typeof v === "number") return v === 1;
+            if (typeof v === "string") {
+                return ["true", "x", "yes", "1"].includes(v.toLowerCase());
+            }
+            return false;
         }
-
-
-
 
 
     });
