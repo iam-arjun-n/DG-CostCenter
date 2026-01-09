@@ -42,7 +42,7 @@
                                 <content>
                                     <OverflowToolbar id="Submission_Header1" width="100%">
                                         <content>
-                                            <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_FileUploader" sameFilenameAllowed="true" 
+                                            <sap.ui.unified:FileUploader xmlns:sap.ui.unified="sap.ui.unified" id="Submission_FileUploader" buttonText="Upload" sameFilenameAllowed="true" 
                                                 iconOnly="false" buttonOnly="true" fileType="XLSX,xlsx" icon="sap-icon://upload" iconFirst="true" style="Emphasized" 
                                                 change="onExcelUpload" visible="false" />
                                             <Button id="Submission_Button_Export" text="Download Template" icon="sap-icon://download" type="Default" press="onDownloadTemplate"/>
