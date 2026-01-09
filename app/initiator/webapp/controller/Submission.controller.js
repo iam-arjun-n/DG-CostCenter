@@ -1420,57 +1420,31 @@ sap.ui.define([
         },
 
         //Mass Upload
+        // onDownloadTemplate: function () {
+        //     const sTemplate = "Cost Center Mass Upload Template.xlsx";
+        //     const sBasePath = "com/deloitte/mdg/costcenter/initiator/initiator/templates/";
+
+        //     sap.m.URLHelper.redirect(
+        //         sap.ui.require.toUrl(sBasePath + sTemplate),
+        //         true
+        //     );
+        // },
         onDownloadTemplate: function () {
+            const sUrl = sap.ui.require.toUrl(
+                "com/deloitte/mdg/costcenter/initiator/initiator/templates/Cost Center Mass Upload Template.xlsx"
+            );
 
-            const workbook = XLSX.utils.book_new();
-
-            // ---------- Sheet 1: Header Data ----------
-            let wsHeader = XLSX.utils.json_to_sheet([], {
-                header: [
-                    "Controlling Area",
-                    "Cost Center",
-                    "Valid From",
-                    "Valid To"
-                ]
-            });
-            XLSX.utils.book_append_sheet(workbook, wsHeader, "Header Data");
-
-            // ---------- Sheet 2: Basic Data ----------
-            let wsBasic = XLSX.utils.json_to_sheet([], {
-                header: [
-                    "Name",
-                    "Description",
-                    "User Responsible",
-                    "Person Responsible",
-                    "Department",
-                    "Cost Center Category",
-                    "Hierarchy Area",
-                    "Company Code",
-                    "Business Area",
-                    "Currency",
-                    "Profit Center"
-                ]
-            });
-            XLSX.utils.book_append_sheet(workbook, wsBasic, "Basic Data");
-
-            // ---------- Sheet 3: Control ----------
-            let wsControl = XLSX.utils.json_to_sheet([], {
-                header: [
-                    "Record Quantity",
-                    "Actual Primary Costs",
-                    "Actual Secondary Costs",
-                    "Plan Primary Costs",
-                    "Plan Secondary Costs",
-                    "Actual Revenue",
-                    "Plan Revenue",
-                    "Commitment Update"
-                ]
-            });
-            XLSX.utils.book_append_sheet(workbook, wsControl, "Control");
-
-            // ---------- Download ----------
-            XLSX.writeFile(workbook, "CostCenter_Template.xlsx");
+            const oLink = document.createElement("a");
+            oLink.href = sUrl;
+            oLink.download = "Cost Center Mass Upload Template.xlsx";
+            document.body.appendChild(oLink);
+            oLink.click();
+            document.body.removeChild(oLink);
         }
+
+
+
+
 
     });
 });
