@@ -39,25 +39,58 @@ sap.ui.define([
         },
 
         _onRouteMatched: function (oEvent) {
-            var args = oEvent.getParameter("arguments");
-            var sType = args.request_type || "create";
-            var sReqId = args.request_id;
-            var sFormatted = sType.charAt(0).toUpperCase() + sType.slice(1);
+            const args = oEvent.getParameter("arguments") || {};
+            const sRouteType = args.request_type || "create";   // create | view | change | extend
+            const sReqId = args.request_id;
 
-            this.getView().getModel("DraftModel").setProperty("/requestType", sFormatted);
-            this._applyVisibility(sFormatted);
-            if (sType === "view" && sReqId) {
-                this._loadRequestFromCAP(sReqId);
+            const oDraftModel = this.getView().getModel("DraftModel");
+
+            // ---------- CREATE / CHANGE / EXTEND ----------
+            if (sRouteType !== "view") {
+
+                const sFormatted =
+                    sRouteType.charAt(0).toUpperCase() + sRouteType.slice(1);
+
+                oDraftModel.setProperty("/requestType", sFormatted);
+
+                this._applyVisibility(sFormatted);
+
+                // set user info
+                this.getUserInfo()
+                    .then((u) => {
+                        oDraftModel.setProperty(
+                            "/createdByName",
+                            u.displayName || u.email || u.name || u
+                        );
+                    })
+                    .catch(() => { });
+
+                // load SAP CC reference (extend / change / create from ref)
+                if (args.ca && args.cc && args.ve) {
+                    this._loadSAPCostCenter(args.ca, args.cc, args.ve);
+                }
+
                 return;
             }
-            this.getUserInfo().then((u) => {
 
-                this.getView().getModel("DraftModel").setProperty("/createdByName", u.displayName || u.email || u.name || u);
-            }).catch(() => {
-            });
+            // ---------- VIEW MODE ----------
+            if (sRouteType === "view" && sReqId) {
 
-            if (args.ca && args.cc && args.ve) {
-                this._loadSAPCostCenter(args.ca, args.cc, args.ve);
+                // Load request first (ASYNC)
+                this._loadRequestFromCAP(sReqId).then(() => {
+
+                    const oDraft = oDraftModel.getData();
+                    let sVisibilityKey = "View";
+
+                    // Draft-specific visibility
+                    if (oDraft.workflowStatus === "Draft") {
+                        sVisibilityKey = "Draft_" + oDraft.requestType;
+                    }
+
+                    this._applyVisibility(sVisibilityKey);
+                });
+
+                return;
             }
         },
 
@@ -605,20 +638,26 @@ sap.ui.define([
 
         initiateApprovalProcess: async function () {
             try {
-                let oDraft = this.getView().getModel("DraftModel").getData();
-                let oModel = this.getOwnerComponent().getModel("ServiceModel");
-                let comments = this.getView().getModel("commentModel").getData();
+                const oView = this.getView();
+                const oDraftModel = oView.getModel("DraftModel");
+                const oDraft = oDraftModel.getData();
+                const oModel = this.getOwnerComponent().getModel("ServiceModel");
+                const aComments = oView.getModel("commentModel").getData() || [];
 
-                if (comments.length === 0) {
-                    MessageBox.information("Please add at least one comment before sending for approval.");
+                if (aComments.length === 0) {
+                    sap.m.MessageBox.information(
+                        "Please add at least one comment before sending for approval."
+                    );
                     return;
                 }
 
-                let payload = {
+                const payload = {
                     requestType: oDraft.requestType,
+                    workflowStatus: "InApproval",
+                    requestStatus: "Submitted",
                     createdByName: oDraft.createdByName,
+
                     costCenterData: oDraft.costCenterData.map(i => ({
-                        //Basic Data Tab
                         controllingArea: i.controllingArea,
                         costCenter: i.costCenter,
                         validFrom: this.toISO(i.validFrom),
@@ -635,7 +674,6 @@ sap.ui.define([
                         currency: i.currency,
                         profitCenter: i.profitCenter,
 
-                        //Control Tab
                         recordQuantity: i.recordQuantity,
                         actualPrimaryCosts: i.actualPrimaryCosts,
                         actualSecondaryCosts: i.actualSecondaryCosts,
@@ -645,18 +683,39 @@ sap.ui.define([
                         planRevenue: i.planRevenue,
                         commitmentUpdate: i.commitmentUpdate
                     })),
-                    comments: comments.map(c => ({
+
+                    comments: aComments.map(c => ({
                         user: c.UserName,
                         role: "Initiator",
                         commentText: c.Text
                     }))
                 };
 
-                let listBinding = oModel.bindList("/CostCenterRequests");
-                let context = await listBinding.create(payload);
-                await context.created();
-                let reqId = context.getProperty("requestId");
-                let response = await fetch(
+                let reqId;
+
+                // ===== UPDATE EXISTING DRAFT → IN APPROVAL =====
+                if (oDraft.requestId) {
+                    const ctx = oModel.bindContext(
+                        `/CostCenterRequests('${oDraft.requestId}')`
+                    );
+
+                    Object.keys(payload).forEach(k => {
+                        ctx.setProperty(k, payload[k]);
+                    });
+
+                    await ctx.requestPatch();
+                    reqId = oDraft.requestId;
+                }
+                // ===== CREATE NEW REQUEST =====
+                else {
+                    const listBinding = oModel.bindList("/CostCenterRequests");
+                    const context = await listBinding.create(payload);
+                    await context.created();
+                    reqId = context.getProperty("requestId");
+                }
+
+                // ===== TRIGGER WORKFLOW =====
+                const response = await fetch(
                     this._getWorkflowBaseURL() + "/workflow-instances",
                     {
                         method: "POST",
@@ -665,27 +724,31 @@ sap.ui.define([
                             "X-CSRF-Token": this._fetchCSRFToken()
                         },
                         body: JSON.stringify({
-                            definitionId: "com.deloitte.mdg.costcenter.workflow.costcenterapprovalprocess",
+                            definitionId:
+                                "com.deloitte.mdg.costcenter.workflow.costcenterapprovalprocess",
                             context: { ReqId: reqId }
                         })
                     }
                 );
 
                 if (!response.ok) {
-                    let msg = await response.text();
-                    throw new Error(msg);
+                    throw new Error(await response.text());
                 }
 
-                MessageToast.show("Request submitted successfully!");
-                sap.ui.core.UIComponent.getRouterFor(this).navTo("RouteOverview");
+                sap.m.MessageToast.show("Request submitted successfully");
 
-                this.getView().getModel("commentModel").setData([]);
-                this.getView().getModel("DraftModel").setProperty("/costCenterData", []);
+                sap.ui.core.UIComponent
+                    .getRouterFor(this)
+                    .navTo("RouteOverview");
+
+                oView.getModel("commentModel").setData([]);
+                oDraftModel.setProperty("/costCenterData", []);
 
             } catch (e) {
-                MessageBox.error("Submit failed: " + e.message);
+                sap.m.MessageBox.error("Submit failed:\n\n" + (e.message || e));
             }
         },
+
 
         //Draft Function
         onDraftPress: async function () {
@@ -696,7 +759,6 @@ sap.ui.define([
                 const oModel = this.getOwnerComponent().getModel("ServiceModel");
                 const aComments = oView.getModel("commentModel").getData() || [];
 
-                // ---- Build payload ----
                 const payload = {
                     requestType: oDraft.requestType,
                     workflowStatus: "Draft",
@@ -737,34 +799,32 @@ sap.ui.define([
                     }))
                 };
 
-                // ---- UPDATE EXISTING DRAFT ----
+                // ===== UPDATE EXISTING DRAFT =====
                 if (oDraft.requestId) {
-
-                    const oContext = oModel.bindContext(
-                        `/CostCenterRequests(requestId='${oDraft.requestId}')`
+                    const ctx = oModel.bindContext(
+                        `/CostCenterRequests('${oDraft.requestId}')`
                     );
 
-                    Object.keys(payload).forEach(key => {
-                        oContext.setProperty(key, payload[key]);
+                    Object.keys(payload).forEach(k => {
+                        ctx.setProperty(k, payload[k]);
                     });
 
-                    await oContext.requestPatch();
-
+                    await ctx.requestPatch();
                 }
-                // ---- CREATE NEW DRAFT ----
+                // ===== CREATE NEW DRAFT =====
                 else {
-
                     const listBinding = oModel.bindList("/CostCenterRequests");
                     const context = await listBinding.create(payload);
                     await context.created();
 
-                    // Store generated requestId back into DraftModel
-                    oDraftModel.setProperty("/requestId", context.getProperty("requestId"));
+                    oDraftModel.setProperty(
+                        "/requestId",
+                        context.getProperty("requestId")
+                    );
                 }
 
                 sap.m.MessageToast.show("Draft saved successfully");
 
-                // ---- Navigate back to Overview ----
                 sap.ui.core.UIComponent
                     .getRouterFor(this)
                     .navTo("RouteOverview");

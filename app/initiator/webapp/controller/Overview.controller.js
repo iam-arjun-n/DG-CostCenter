@@ -20,6 +20,23 @@ sap.ui.define([
         onInit: function () {
             this._oModel = this.getView().getModel("ServiceModel");
             this._addCurrentUserToken();
+
+            const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+            oRouter.getRoute("RouteOverview")
+                .attachPatternMatched(this._onOverviewRouteMatched, this);
+
+        },
+        _onOverviewRouteMatched: function () {
+            const oTable = this.byId("Overview_Table");
+            if (!oTable) {
+                return;
+            }
+
+            const oBinding = oTable.getBinding("items");
+            if (oBinding) {
+                oTable.removeSelections();
+                oBinding.refresh();
+            }
         },
 
         _addCurrentUserToken: function () {
