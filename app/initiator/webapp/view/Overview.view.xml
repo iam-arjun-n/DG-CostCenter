@@ -132,6 +132,7 @@
                         <content>
                             <ToolbarSpacer id="Overview_ToolbarSpacer1"/>
                             <Button id="Overview_Button_Export" icon="sap-icon://excel-attachment" text="Export" press="onExport"/>
+                            <Button id="Overview_Button_DeleteDraft" type="Reject" text="Delete Draft" press="onDeleteDraftPress" icon="sap-icon://delete" enabled="false"/>
                             <Button id="Overview_Button_View" icon="sap-icon://detail-view" text="View" press="viewRequest" type="Emphasized" enabled="false"/>
                             <Label id="Overview_Label5" text="Maximum Records" labelFor="maxL" required="true"/>
                             <Input id="maxL" width="10%" value="50" type="Number" maxLength="5"/>

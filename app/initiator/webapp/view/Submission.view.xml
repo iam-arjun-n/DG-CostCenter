@@ -76,9 +76,9 @@
         <footer>
             <OverflowToolbar id="Submission_Toolbar2">
                 <Button id="Submission_Button_Message" icon="sap-icon://message-popup" press="handleMessagePopoverPress" text="{messageall>/messagesLength}" type="{= ${messageall>/messagesLength} > 0 ? 'Reject' : 'Default'}"/>
+                <Button text="Save as Draft" id="Submission_Button_SaveAsDraft" type="Attention" press="onDraftPress" visible="true"/>
                 <ToolbarSpacer id="Submission_ToolbarSpacer" />
-                <Button text="Validate" id="Submission_Button_Validate" icon="sap-icon://validate" type="Ghost" press="checkForMandateFields" visible="false" />
-                  <Button text="Duplicate Check" id="Submission_Button_Duplicatecheck" press="MassDuplicateCheck" type="Emphasized"  />
+                <Button text="Duplicate Check" id="Submission_Button_Duplicatecheck" press="MassDuplicateCheck" type="Emphasized"  />
                 <Button text="Send for Approval" id="Submission_Button_Send" icon="sap-icon://paper-plane" type="Accept" press="initiateApprovalProcess"/>
                 <content/>
             </OverflowToolbar>

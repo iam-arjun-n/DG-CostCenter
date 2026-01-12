@@ -149,7 +149,7 @@
         },
         {
           "name": "RouteSubmission",
-          "pattern": "submission/{request_type}/:ca:/:cc:/:ve:/:request_id:",
+          "pattern": "submission/{request_type}/:ca:/:cc:/:ve:/:request_id:/:draft:",
           "greedy": true,
           "target": [
             "TargetSubmission"

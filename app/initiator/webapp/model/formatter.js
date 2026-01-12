@@ -13,6 +13,7 @@ sap.ui.define([], function () {
                     return "Error";
                 case "Completed":
                     return "Success";
+                
                 default:
                     return "Information";
             }

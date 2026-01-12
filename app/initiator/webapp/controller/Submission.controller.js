@@ -168,7 +168,8 @@ sap.ui.define([
                         "Submission_Button_Add", "Submission_Button_Delete",
                         "Submission_Button_Edit", "Submission_Button_View",
                         "Submission_Button_Send", "Submission_Button_Duplicatecheck",
-                        "Submission_FileUploader", "Submission_Button_Export"
+                        "Submission_FileUploader", "Submission_Button_Export",
+                        "Submission_Button_SaveAsDraft"
                     ]
                 },
                 Change: {
@@ -178,7 +179,8 @@ sap.ui.define([
                     ],
                     buttons: [
                         "Submission_Button_Edit", "Submission_Button_View",
-                        "Submission_Button_ChangeLog", "Submission_Button_Send"
+                        "Submission_Button_ChangeLog", "Submission_Button_Send",
+                        "Submission_Button_SaveAsDraft"
                     ]
                 },
                 Extend: {
@@ -188,7 +190,7 @@ sap.ui.define([
                     ],
                     buttons: [
                         "Submission_Button_Edit", "Submission_Button_View",
-                        "Submission_Button_Send"
+                        "Submission_Button_Send", "Submission_Button_SaveAsDraft"
                     ]
                 },
                 View: {
@@ -200,6 +202,38 @@ sap.ui.define([
                     ],
                     buttons: [
                         "Submission_Button_View"
+                    ]
+                },
+
+                Draft_Create: {
+                    columns: ["Submission_Column_ControllingArea", "Submission_Column_CostCenter", "Submission_Column_Name", "Submission_Column_Description"],
+                    buttons: [
+                        "Submission_Button_Add", "Submission_Button_Delete",
+                        "Submission_Button_Edit", "Submission_Button_View",
+                        "Submission_Button_Send", "Submission_Button_Duplicatecheck",
+                        "Submission_FileUploader", "Submission_Button_Export",
+                        "Submission_Button_SaveAsDraft"
+                    ]
+                },
+                Draft_Change: {
+                    columns: [
+                        "Submission_Column_CostCenter", "Submission_Column_Name",
+                        "Submission_Column_Description", "Submission_Column_UserResponsible"
+                    ],
+                    buttons: [
+                        "Submission_Button_Edit", "Submission_Button_View",
+                        "Submission_Button_ChangeLog", "Submission_Button_Send",
+                        "Submission_Button_SaveAsDraft"
+                    ]
+                },
+                Draft_Extend: {
+                    columns: [
+                        "Submission_Column_CostCenter", "Submission_Column_Name",
+                        "Submission_Column_Description", "Submission_Column_UserResponsible"
+                    ],
+                    buttons: [
+                        "Submission_Button_Edit", "Submission_Button_View",
+                        "Submission_Button_Send", "Submission_Button_SaveAsDraft"
                     ]
                 }
             };
@@ -215,8 +249,8 @@ sap.ui.define([
                 "Submission_Button_Edit", "Submission_Button_Delete",
                 "Submission_Button_View", "Submission_Button_ChangeLog",
                 "Submission_Button_Send", "Submission_Button_Duplicatecheck",
-                "Submission_Button_Validate", "Submission_FileUploader",
-                "Submission_Button_Export"
+                "Submission_FileUploader", "Submission_Button_Export",
+                "Submission_Button_SaveAsDraft"
             ];
 
             allColumns.concat(allButtons).forEach(function (id) {
@@ -580,7 +614,6 @@ sap.ui.define([
                     return;
                 }
 
-                // 1️⃣ Create CAP object
                 let payload = {
                     requestType: oDraft.requestType,
                     createdByName: oDraft.createdByName,
@@ -651,6 +684,95 @@ sap.ui.define([
 
             } catch (e) {
                 MessageBox.error("Submit failed: " + e.message);
+            }
+        },
+
+        //Draft Function
+        onDraftPress: async function () {
+            try {
+                const oView = this.getView();
+                const oDraftModel = oView.getModel("DraftModel");
+                const oDraft = oDraftModel.getData();
+                const oModel = this.getOwnerComponent().getModel("ServiceModel");
+                const aComments = oView.getModel("commentModel").getData() || [];
+
+                // ---- Build payload ----
+                const payload = {
+                    requestType: oDraft.requestType,
+                    workflowStatus: "Draft",
+                    requestStatus: "Draft",
+                    createdByName: oDraft.createdByName,
+
+                    costCenterData: oDraft.costCenterData.map(i => ({
+                        controllingArea: i.controllingArea,
+                        costCenter: i.costCenter,
+                        validFrom: this.toISO(i.validFrom),
+                        validTo: this.toISO(i.validTo),
+                        name: i.name,
+                        description: i.description,
+                        userResponsible: i.userResponsible,
+                        personResponsible: i.personResponsible,
+                        department: i.department,
+                        costCenterCategory: i.costCenterCategory,
+                        hierarchyArea: i.hierarchyArea,
+                        companyCode: i.companyCode,
+                        businessArea: i.businessArea,
+                        currency: i.currency,
+                        profitCenter: i.profitCenter,
+
+                        recordQuantity: i.recordQuantity,
+                        actualPrimaryCosts: i.actualPrimaryCosts,
+                        actualSecondaryCosts: i.actualSecondaryCosts,
+                        planPrimaryCosts: i.planPrimaryCosts,
+                        planSecondaryCosts: i.planSecondaryCosts,
+                        actualRevenue: i.actualRevenue,
+                        planRevenue: i.planRevenue,
+                        commitmentUpdate: i.commitmentUpdate
+                    })),
+
+                    comments: aComments.map(c => ({
+                        user: c.UserName,
+                        role: "Initiator",
+                        commentText: c.Text
+                    }))
+                };
+
+                // ---- UPDATE EXISTING DRAFT ----
+                if (oDraft.requestId) {
+
+                    const oContext = oModel.bindContext(
+                        `/CostCenterRequests(requestId='${oDraft.requestId}')`
+                    );
+
+                    Object.keys(payload).forEach(key => {
+                        oContext.setProperty(key, payload[key]);
+                    });
+
+                    await oContext.requestPatch();
+
+                }
+                // ---- CREATE NEW DRAFT ----
+                else {
+
+                    const listBinding = oModel.bindList("/CostCenterRequests");
+                    const context = await listBinding.create(payload);
+                    await context.created();
+
+                    // Store generated requestId back into DraftModel
+                    oDraftModel.setProperty("/requestId", context.getProperty("requestId"));
+                }
+
+                sap.m.MessageToast.show("Draft saved successfully");
+
+                // ---- Navigate back to Overview ----
+                sap.ui.core.UIComponent
+                    .getRouterFor(this)
+                    .navTo("RouteOverview");
+
+            } catch (e) {
+                sap.m.MessageBox.error(
+                    "Failed to save draft.\n\n" + (e.message || e)
+                );
             }
         },
 

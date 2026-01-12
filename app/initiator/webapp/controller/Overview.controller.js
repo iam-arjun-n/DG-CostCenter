@@ -155,19 +155,23 @@ sap.ui.define([
         onUpdateStarted: function () { },
 
         onRequestSelectionChange: function (oEvent) {
-            var oItem = oEvent.getParameter("listItem");
-            var oViewButton = this.byId("Overview_Button_View");
+            const oItem = oEvent.getParameter("listItem");
+            const oViewBtn = this.byId("Overview_Button_View");
+            const oDeleteBtn = this.byId("Overview_Button_DeleteDraft");
 
             if (!oItem) {
-                oViewButton.setEnabled(false);
-                this._sSelectedRequestId = null;
+                oViewBtn.setEnabled(false);
+                oDeleteBtn.setEnabled(false);
                 return;
             }
 
-            var oCtx = oItem.getBindingContext("ServiceModel");
+            const oCtx = oItem.getBindingContext("ServiceModel");
+            const status = oCtx.getProperty("workflowStatus");
+
             this._sSelectedRequestId = oCtx.getProperty("requestId");
 
-            oViewButton.setEnabled(true);
+            oViewBtn.setEnabled(true);
+            oDeleteBtn.setEnabled(status === "Draft");
         },
 
         onExport: function () {
@@ -208,6 +212,7 @@ sap.ui.define([
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
             oRouter.navTo("RouteDisplay");
         },
+
         viewRequest: function () {
             if (!this._sSelectedRequestId) {
                 MessageBox.warning("Please select a request first.");
@@ -218,6 +223,46 @@ sap.ui.define([
             oRouter.navTo("RouteSubmission", {
                 request_type: "view",
                 request_id: this._sSelectedRequestId
+            });
+        },
+
+        onDeleteDraftPress: function () {
+            const oTable = this.byId("Overview_Table");
+            const oItem = oTable.getSelectedItem();
+
+            if (!oItem) {
+                sap.m.MessageBox.warning("Select a draft to delete");
+                return;
+            }
+
+            const oCtx = oItem.getBindingContext("ServiceModel");
+            const sStatus = oCtx.getProperty("workflowStatus");
+
+            if (sStatus !== "Draft") {
+                sap.m.MessageBox.error("Only Draft requests can be deleted");
+                return;
+            }
+
+            sap.m.MessageBox.confirm("Delete this draft?", {
+                actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
+                onClose: async (sAction) => {
+                    if (sAction !== sap.m.MessageBox.Action.OK) {
+                        return;
+                    }
+
+                    try {
+                        await oCtx.delete();
+
+                        sap.m.MessageToast.show("Draft deleted");
+
+                        oTable.removeSelections();
+                        oTable.getBinding("items").refresh();
+
+                    } catch (e) {
+                        console.error("Delete failed", e);
+                        sap.m.MessageBox.error("Failed to delete draft");
+                    }
+                }
             });
         },
 

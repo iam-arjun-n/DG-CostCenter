@@ -17,6 +17,7 @@ type RequestStatus  : String enum {
 
 @assert.range
 type WorkflowStatus : String enum {
+  Draft;
   NotStarted;
   InApproval;
   Completed;
