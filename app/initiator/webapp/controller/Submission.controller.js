@@ -1427,16 +1427,10 @@ sap.ui.define([
 
         //Mass Upload
         onDownloadTemplate: function () {
-            const sUrl = sap.ui.require.toUrl(
-                "com/deloitte/mdg/costcenter/initiator/initiator/templates/Cost Center Mass Upload Template.xlsx"
-            );
+            const sUrl = this.getOwnerComponent().getManifestObject()
+                .resolveUri("templates/Cost_Center_Mass_Upload_Template.xlsx");
 
-            const oLink = document.createElement("a");
-            oLink.href = sUrl;
-            oLink.download = "Cost Center Mass Upload Template.xlsx";
-            document.body.appendChild(oLink);
-            oLink.click();
-            document.body.removeChild(oLink);
+            sap.m.URLHelper.redirect(sUrl, true);
         },
 
         onExcelUpload: function (oEvent) {
@@ -1532,6 +1526,7 @@ sap.ui.define([
         },
 
         _mapCostCenterRow: function (row) {
+            console.log("Profit Center cell:", row["Profit Center"]);
             return {
                 controllingArea: row["Controlling Area"],
                 costCenter: row["Cost Center"],
@@ -1548,8 +1543,6 @@ sap.ui.define([
                 businessArea: row["Business Area"],
                 currency: row["Currency"],
                 profitCenter: row["Profit Center"],
-
-                // ✅ FIXED
                 recordQuantity: this._toBoolean(row["Record Quantity"]),
                 actualPrimaryCosts: this._toBoolean(row["Actual Primary Costs"]),
                 actualSecondaryCosts: this._toBoolean(row["Actual Secondary Costs"]),
@@ -1559,6 +1552,7 @@ sap.ui.define([
                 planRevenue: this._toBoolean(row["Plan Revenue"]),
                 commitmentUpdate: this._toBoolean(row["Commitment Update"])
             };
+
         },
         _isValidExcelDate: function (value) {
             if (!value) return false;
