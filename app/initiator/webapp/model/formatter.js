@@ -3,19 +3,42 @@ sap.ui.define([], function () {
     return {
         getColor: function (ReqStat) {
             switch (ReqStat) {
+                case "Draft":
+                    return "Warning";
+
+                case "In Approval":
                 case "A":
                     return "Information";
-                case "Not Started":
-                    return "Error";
+
+                case "Completed":
                 case "C":
                     return "Success";
+
                 case "Rejected":
+                case "Not Started":
                     return "Error";
-                case "Completed":
-                    return "Success";
-                
+
                 default:
                     return "Information";
+            }
+        },
+        getHighlight: function (status) {
+            switch (status) {
+                case "Draft":
+                    return "Warning";   
+
+                case "InApproval":
+                case "In Approval":
+                    return "Information";
+
+                case "Completed":
+                    return "Success";  
+
+                case "Rejected":
+                    return "Error"; 
+
+                default:
+                    return "None";
             }
         },
 

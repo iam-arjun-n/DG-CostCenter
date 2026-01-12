@@ -116,7 +116,7 @@
                 </columns>
                 
                 <items>
-                    <ColumnListItem id="Overview_ColumnListItem">
+                    <ColumnListItem id="Overview_ColumnListItem" highlight="{ path: 'ServiceModel>workflowStatus', formatter: '.formatter.getHighlight' }">
                         <cells>
                             <Link id="Overview_Link" text="{ServiceModel>requestId}" press="onRequestPress"/>
                             <Text id="Overview_Text" text="{ServiceModel>requestType}"/>
