@@ -105,10 +105,10 @@ sap.ui.define([
 
             oContext.requestObject().then((oData) => {
                 var oDraft = this.getView().getModel("DraftModel");
-
+                const isDraft = oData.workflowStatus === "Draft";
                 oDraft.setData({
                     requestId: oData.requestId,
-                    requestType: "View",
+                    requestType: isDraft ? oData.requestType : "View",
                     workflowStatus: oData.workflowStatus,
                     requestStatus: oData.requestStatus,
                     createdByName: oData.createdByName,
@@ -635,6 +635,51 @@ sap.ui.define([
             oEvent.getSource().setValue("");
         },
 
+        async _fetchServiceCSRFToken() {
+            const base = this.getOwnerComponent()
+                .getManifestEntry("/sap.app/dataSources/DatabaseService/uri");
+
+            const response = await fetch(base, {
+                method: "GET",
+                headers: {
+                    "X-CSRF-Token": "Fetch"
+                },
+                credentials: "include"
+            });
+
+            const token = response.headers.get("X-CSRF-Token");
+
+            if (!token) {
+                throw new Error("Failed to fetch CSRF token");
+            }
+
+            return token;
+        },
+        async _patchRequest(payload, requestId) {
+            const base = this.getOwnerComponent()
+                .getManifestEntry("/sap.app/dataSources/DatabaseService/uri");
+
+            const csrfToken = await this._fetchServiceCSRFToken();
+
+            const response = await fetch(
+                `${base}CostCenterRequests(requestId='${requestId}')`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": csrfToken
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(payload)
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(await response.text());
+            }
+        },
+
+
 
         initiateApprovalProcess: async function () {
             try {
@@ -645,7 +690,7 @@ sap.ui.define([
                 const aComments = oView.getModel("commentModel").getData() || [];
 
                 if (aComments.length === 0) {
-                    sap.m.MessageBox.information(
+                    MessageBox.information(
                         "Please add at least one comment before sending for approval."
                     );
                     return;
@@ -693,18 +738,10 @@ sap.ui.define([
 
                 let reqId;
 
-                // ===== UPDATE EXISTING DRAFT → IN APPROVAL =====
+                // ===== UPDATE DRAFT → SUBMITTED (CORRECT WAY) =====
                 if (oDraft.requestId) {
-                    const ctx = oModel.bindContext(
-                        `/CostCenterRequests('${oDraft.requestId}')`
-                    );
-
-                    Object.keys(payload).forEach(k => {
-                        ctx.setProperty(k, payload[k]);
-                    });
-
-                    await ctx.requestPatch();
-                    reqId = oDraft.requestId;
+                    await this._patchRequest(payload, oDraft.requestId);
+                    reqId=oDraft.requestId;
                 }
                 // ===== CREATE NEW REQUEST =====
                 else {
@@ -735,7 +772,7 @@ sap.ui.define([
                     throw new Error(await response.text());
                 }
 
-                sap.m.MessageToast.show("Request submitted successfully");
+                MessageToast.show("Request submitted successfully");
 
                 sap.ui.core.UIComponent
                     .getRouterFor(this)
@@ -745,10 +782,9 @@ sap.ui.define([
                 oDraftModel.setProperty("/costCenterData", []);
 
             } catch (e) {
-                sap.m.MessageBox.error("Submit failed:\n\n" + (e.message || e));
+                MessageBox.error("Submit failed:\n\n" + (e.message || e));
             }
         },
-
 
         //Draft Function
         onDraftPress: async function () {
@@ -799,17 +835,9 @@ sap.ui.define([
                     }))
                 };
 
-                // ===== UPDATE EXISTING DRAFT =====
+                // ===== UPDATE EXISTING DRAFT (CORRECT WAY) =====
                 if (oDraft.requestId) {
-                    const ctx = oModel.bindContext(
-                        `/CostCenterRequests('${oDraft.requestId}')`
-                    );
-
-                    Object.keys(payload).forEach(k => {
-                        ctx.setProperty(k, payload[k]);
-                    });
-
-                    await ctx.requestPatch();
+                    await this._patchRequest(payload, oDraft.requestId);
                 }
                 // ===== CREATE NEW DRAFT =====
                 else {
@@ -823,16 +851,14 @@ sap.ui.define([
                     );
                 }
 
-                sap.m.MessageToast.show("Draft saved successfully");
+                MessageToast.show("Draft saved successfully");
 
                 sap.ui.core.UIComponent
                     .getRouterFor(this)
                     .navTo("RouteOverview");
 
             } catch (e) {
-                sap.m.MessageBox.error(
-                    "Failed to save draft.\n\n" + (e.message || e)
-                );
+                MessageBox.error("Failed to save draft:\n\n" + (e.message || e));
             }
         },
 
