@@ -54,7 +54,7 @@
                                     <Select xmlns="sap.m" id="Workflow_Status" forceSelection="false">
                                         <items>
                                             <core:Item id="Overview_Item5"  xmlns:core="sap.ui.core" key="" text=""/>
-                                            <core:Item id="Overview_Item6"  xmlns:core="sap.ui.core" key="In Approval" text="In Approval"/>
+                                            <core:Item id="Overview_Item6"  xmlns:core="sap.ui.core" key="InApproval" text="In Approval"/>
                                             <core:Item id="Overview_Item7"  xmlns:core="sap.ui.core" key="Completed" text="Completed"/>
                                             <core:Item id="Overview_Item8"  xmlns:core="sap.ui.core" key="Rejected" text="Rejected"/>
                                         </items>
@@ -120,7 +120,7 @@
                         <cells>
                             <Link id="Overview_Link" text="{ServiceModel>requestId}" press="onRequestPress"/>
                             <Text id="Overview_Text" text="{ServiceModel>requestType}"/>
-                            <ObjectStatus id="Overview_ObjectStatus" text="{ServiceModel>workflowStatus}" state="{ path:'ServiceModel>workflowStatus', formatter:'.formatter.getColor'}"/>
+                            <ObjectStatus id="Overview_ObjectStatus" text="{ path:'ServiceModel>workflowStatus', formatter:'.formatter.reqWorkflowText' }" state="{ path:'ServiceModel>workflowStatus', formatter:'.formatter.getColor'}"/>
                             <Text id="Overview_Text1" text="{ path: 'ServiceModel>createdAt' , formatter:'.formatter.extDate'}"/>
                             <Text id="Overview_Text2" text="{ServiceModel>createdBy}"/>
                         </cells>

@@ -25,61 +25,33 @@ sap.ui.define([], function () {
         getHighlight: function (status) {
             switch (status) {
                 case "Draft":
-                    return "Warning";   
+                    return "Warning";
 
                 case "InApproval":
                 case "In Approval":
                     return "Information";
 
                 case "Completed":
-                    return "Success";  
+                    return "Success";
 
                 case "Rejected":
-                    return "Error"; 
+                    return "Error";
 
                 default:
                     return "None";
             }
         },
 
-        checkStatus: function (oStatus) {
-            switch (oStatus) {
-                case "C":
-                    return true;
-                default:
-                    return false;
+        reqWorkflowText: function (sStatus) {
+            switch (sStatus) {
+                case "Draft": return "Draft";
+                case "InApproval": return "In Approval";
+                case "Completed": return "Completed";
+                case "Rejected": return "Rejected";
+                default: return sStatus;
             }
         },
-
-        reqStatus: function (ReqStat) {
-            switch (ReqStat) {
-                case "In Approval":
-                    return "In Approval";
-                case "R":
-                    return "Rejected";
-                case "C":
-                    return "Completed";
-                case "Completed":
-                    return "Completed";
-                case "Initiator":
-                    return "Initiator";
-                case "HOD":
-                    return "At HOD";
-                case "MDM":
-                    return "At MDM";
-                case "Costing":
-                    return "At Costing";
-                case "Commercial":
-                    return "At Commercial";
-                case "CostingAndCommercial":
-                    return "At Costing & Commercial";
-                case "Rejected":
-                    return "Rejected";
-                default:
-                    return "Not Defined";
-            }
-        },
-
+        
         extDate: function (date) {
             if (date) {
                 const day = date.toLocaleString("default", { day: "2-digit" });
