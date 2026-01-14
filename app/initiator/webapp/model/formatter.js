@@ -48,6 +48,7 @@ sap.ui.define([], function () {
                 case "InApproval": return "In Approval";
                 case "Completed": return "Completed";
                 case "Rejected": return "Rejected";
+                case "NotStarted": return "Not Started";
                 default: return sStatus;
             }
         },
