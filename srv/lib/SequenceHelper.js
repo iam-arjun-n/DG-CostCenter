@@ -6,11 +6,18 @@ module.exports = class SequenceHelper {
 
   async getNextNumber() {
     try {
-      const sql = `SELECT COUNT(*) AS COUNT FROM "${this.table}"`;
+      const sql = `
+      SELECT MAX("REQUESTID") AS MAX_ID
+      FROM "${this.table}"
+    `;
       const result = await this.db.run(sql);
 
-      const current = parseInt(result[0].COUNT || 0);
-      return current + 1;
+      const maxId = result[0]?.MAX_ID;
+
+      if (!maxId) return 1;
+
+      const numeric = parseInt(maxId.replace("CCTR", ""), 10);
+      return numeric + 1;
 
     } catch (err) {
       console.error("SequenceHelper error:", err);

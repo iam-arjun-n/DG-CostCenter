@@ -29,7 +29,7 @@ class CostCenterService extends cds.ApplicationService {
           return;
         }
         req.data.requestStatus = "Submitted";
-        req.data.workflowStatus = "In Approval";
+        req.data.workflowStatus = "InApproval";
 
       } catch (err) {
         console.error("Error generating requestId:", err);
