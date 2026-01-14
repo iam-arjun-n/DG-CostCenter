@@ -51,14 +51,20 @@ sap.ui.define([], function () {
                 default: return sStatus;
             }
         },
-        
-        extDate: function (date) {
-            if (date) {
-                const day = date.toLocaleString("default", { day: "2-digit" });
-                const month = date.toLocaleString("default", { month: "short" });
-                const year = date.toLocaleString("default", { year: "numeric" });
-                return `${day}-${month}-${year}`;
+
+        extDate: function (vDate) {
+            if (!vDate) {
+                return "";
             }
+            const oDate = vDate instanceof Date ? vDate : new Date(vDate);
+            if (isNaN(oDate.getTime())) {
+                return "";
+            }
+            const dd = String(oDate.getDate()).padStart(2, "0");
+            const mm = String(oDate.getMonth() + 1).padStart(2, "0");
+            const yyyy = oDate.getFullYear();
+
+            return `${dd}-${mm}-${yyyy}`;
         }
     };
 });
