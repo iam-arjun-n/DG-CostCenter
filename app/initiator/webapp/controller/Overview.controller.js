@@ -439,6 +439,81 @@ sap.ui.define([
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
-        }
+        },
+
+        //Link Popup
+        _openCostCenterPopover: function (oSource, aCostCenters) {
+
+            if (!this._oCostCenterPopover) {
+                this._oCostCenterPopover = new sap.m.Popover({
+                    title: "Cost Centers",
+                    placement: sap.m.PlacementType.Auto,
+                    contentWidth: "350px",
+                    resizable: true,
+                    draggable: true,
+                    content: [
+                        new sap.m.List({
+                            items: {
+                                path: "ccPopoverModel>/items",
+                                template: new sap.m.StandardListItem({
+                                    title: "{ccPopoverModel>CostCenter}",
+                                    description: "{ccPopoverModel>Name}"
+                                })
+                            }
+                        })
+                    ]
+                });
+
+                this.getView().addDependent(this._oCostCenterPopover);
+            }
+
+            const oPopoverModel = new sap.ui.model.json.JSONModel({
+                items: aCostCenters
+            });
+
+            this._oCostCenterPopover.setModel(oPopoverModel, "ccPopoverModel");
+            this._oCostCenterPopover.openBy(oSource);
+        },
+
+        onRequestPress: function (oEvent) {
+            const oSource = oEvent.getSource();
+            const oCtx = oSource.getBindingContext("ServiceModel");
+
+            if (!oCtx) {
+                sap.m.MessageBox.error("No request context found");
+                return;
+            }
+
+            const sReqId = oCtx.getProperty("requestId");
+            const oModel = this.getView().getModel("ServiceModel");
+            const oContext = oModel.bindContext(
+                `/CostCenterRequests(requestId='${sReqId}')`,
+                null,
+                { $expand: "costCenterData" }
+            );
+
+            oContext.requestObject()
+                .then(function (oData) {
+                    sap.ui.core.BusyIndicator.hide();
+
+                    const aCostCenters = (oData.costCenterData || []).map(cc => ({
+                        CostCenter: cc.costCenter,
+                        Name: cc.name
+                    }));
+
+                    if (!aCostCenters.length) {
+                        sap.m.MessageToast.show("No Cost Centers found");
+                        return;
+                    }
+
+                    this._openCostCenterPopover(oSource, aCostCenters);
+                }.bind(this))
+                .catch(function (err) {
+                    sap.ui.core.BusyIndicator.hide();
+                    sap.m.MessageBox.error("Failed to load Cost Center details");
+                    console.error(err);
+                });
+        },
+
     });
 });
