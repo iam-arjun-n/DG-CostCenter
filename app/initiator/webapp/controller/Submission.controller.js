@@ -741,7 +741,7 @@ sap.ui.define([
                 // ===== UPDATE DRAFT → SUBMITTED (CORRECT WAY) =====
                 if (oDraft.requestId) {
                     await this._patchRequest(payload, oDraft.requestId);
-                    reqId=oDraft.requestId;
+                    reqId = oDraft.requestId;
                 }
                 // ===== CREATE NEW REQUEST =====
                 else {
@@ -1535,18 +1535,62 @@ sap.ui.define([
             }
         },
 
+        _validateAlphaNumeric: function (ctrl, maxLength, fieldName) {
+            const val = ctrl.getValue().trim();
 
+            this._clearMandatoryErrorIfFilled(ctrl);
+
+            if (!/^[A-Za-z0-9]*$/.test(val)) {
+                this._updateFieldError(ctrl, fieldName + " must be alphanumeric (no spaces)");
+                return false;
+            }
+
+            if (val.length > maxLength) {
+                this._updateFieldError(ctrl, fieldName + " cannot exceed " + maxLength + " characters");
+                return false;
+            }
+
+            this._updateFieldError(ctrl, null);
+            return true;
+        },
         //Validation
         validateControllingArea: function (oEvent) {
             const ctrl = oEvent.getSource();
+            const val = ctrl.getValue().trim();
             this.onInputValueChange(oEvent);
             this._clearMandatoryErrorIfFilled(ctrl);
+
+            if (!/^[A-Za-z0-9\-/_]*$/.test(val)) {
+                this._updateFieldError(ctrl, "Only A-Z, 0-9, '-', '/', '_' allowed");
+                return;
+            }
+
+            if (val.length !== 4) {
+                this._updateFieldError(ctrl, "Controlling Area must be exactly 4 characters");
+                return;
+            }
+
+            this._updateFieldError(ctrl, null);
         },
 
         validateCostCenter: function (oEvent) {
             const ctrl = oEvent.getSource();
             this.onInputValueChange(oEvent);
+            const val = ctrl.getValue().trim();
+
             this._clearMandatoryErrorIfFilled(ctrl);
+
+            if (!/^[A-Za-z0-9\-/_]*$/.test(val)) {
+                this._updateFieldError(ctrl, "Only A-Z, 0-9, '-', '/', '_' allowed");
+                return;
+            }
+
+            if (val.length > 10) {
+                this._updateFieldError(ctrl, "Cost Center cannot exceed 10 characters");
+                return;
+            }
+
+            this._updateFieldError(ctrl, null);
         },
 
         validateName: function (oEvent) {
@@ -1554,13 +1598,8 @@ sap.ui.define([
             const val = ctrl.getValue().trim();
             this._clearMandatoryErrorIfFilled(ctrl);
 
-            if (!/^[A-Za-z ]*$/.test(val)) {
-                this._updateFieldError(ctrl, "No special characters allowed");
-                return;
-            }
-
-            if (val.length > 30) {
-                this._updateFieldError(ctrl, "Name cannot exceed 30 characters");
+            if (val.length > 20) {
+                this._updateFieldError(ctrl, "Name cannot exceed 20 characters");
                 return;
             }
 
@@ -1568,8 +1607,9 @@ sap.ui.define([
         },
 
         validateDescription: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
+            const ctrl = oEvent.getSource();
+            const val = ctrl.getValue().trim();
+
             this._clearMandatoryErrorIfFilled(ctrl);
 
             if (val.length > 40) {
@@ -1577,60 +1617,61 @@ sap.ui.define([
                 return;
             }
 
-            if (!/^[A-Za-z0-9 ]*$/.test(val)) {
-                this._updateFieldError(ctrl, "No special characters allowed");
+            this._updateFieldError(ctrl, null);
+        },
+
+        validateUserResponsible: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 12, "User Responsible");
+        },
+
+        validatePersonResponsible: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 12, "Person Responsible");
+        },
+
+        validateDepartment: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 12, "Department");
+        },
+
+        validateCostCenterCategory: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 2, "Cost Center Category");
+        },
+
+        validateHierarchyArea: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 12, "Hierarchy Area");
+        },
+
+        validateCompanyCode: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 4, "Company Code");
+        },
+
+        validateBusinessArea: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 4, "Business Area");
+        },
+
+        validateCurrency: function (oEvent) {
+            const ctrl = oEvent.getSource();
+            const val = ctrl.getValue().trim();
+
+            this._clearMandatoryErrorIfFilled(ctrl);
+
+            if (val.length < 3 || val.length > 5) {
+                this._updateFieldError(ctrl, "Currency must be between 3 and 5 characters");
                 return;
             }
 
             this._updateFieldError(ctrl, null);
         },
 
-        validatePersonResponsible: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateDepartment: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateCostCenterCategory: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateHierarchyArea: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateCompanyCode: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateBusinessArea: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
-        validateCurrency: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
-        },
-
         validateProfitCenter: function (oEvent) {
-            var ctrl = oEvent.getSource();
-            var val = ctrl.getValue().trim();
-            this._clearMandatoryErrorIfFilled(ctrl);
+            const ctrl = oEvent.getSource();
+            this._validateAlphaNumeric(ctrl, 10, "Profit Center");
         },
 
         //Mass Upload
@@ -1736,8 +1777,8 @@ sap.ui.define([
         _mapCostCenterRow: function (row) {
             console.log("Profit Center cell:", row["Profit Center"]);
             return {
-                controllingArea: row["Controlling Area"],
-                costCenter: row["Cost Center"],
+                controllingArea: String(row["Controlling Area"]).trim(),
+                costCenter: String(row["Cost Center"]).trim(),
                 validFrom: this._formatExcelDate(row["Valid From"]),
                 validTo: this._formatExcelDate(row["Valid To"]),
                 name: row["Name"],
