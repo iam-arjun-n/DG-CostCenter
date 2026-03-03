@@ -379,106 +379,76 @@ ${JSON.stringify({
                                 });
                         });
                 },
+                _fetchS4Csrf: async function (baseUrl) {
 
-                _updateCostCentersInS4: function (costCenters) {
-                        const oModel = this.getModel("CreateCostCenterModel");
+                        const res = await fetch(baseUrl, {
+                                method: "GET",
+                                headers: {
+                                        "X-CSRF-Token": "Fetch"
+                                },
+                                credentials: "include"
+                        });
 
-                        function format(dateStr) {
+                        return res.headers.get("X-CSRF-Token");
+                },
+
+                _updateCostCentersInS4: async function (costCenters) {
+
+                        const baseUrl = this.getModel("UpdateCostCenterModel").sServiceUrl;
+                        const token = await this._fetchS4Csrf(baseUrl);
+
+                        const updatedCostCenters = [];
+
+                        function formatDateForKey(dateStr) {
                                 const d = new Date(dateStr);
-                                return d.toISOString().slice(0, 10).replace(/-/g, "");
+                                return d.toISOString().split(".")[0];
                         }
 
-                        return new Promise((resolve, reject) => {
-                                let completed = 0;
-                                const total = costCenters.length;
-                                let failed = false;
-                                const updatedCostCenters = [];
+                        for (let cc of costCenters) {
 
-                                costCenters.forEach(cc => {
+                                const validityEnd = formatDateForKey("9999-12-31");
 
-                                        if (failed) return;
-                                        const sKey = oModel.createKey("/ETY_COSTCREATESet", {
-                                                COAREA: cc.controllingArea,
-                                                COSTCENTER: cc.costCenter
-                                        });
+                                const url = `${baseUrl}A_CostCenter_2(` +
+                                        `ControllingArea='${cc.controllingArea}',` +
+                                        `CostCenter='${cc.costCenter}',` +
+                                        `ValidityEndDate=datetime'${validityEnd}'` +
+                                        `)`;
 
-                                        const payload = {
-                                                VALIDFROM: format(cc.validFrom),
-                                                VALIDTO: "99991231",
+                                const payload = {
+                                        CostCenterName: cc.name,
+                                        CostCenterDescription: cc.description,
+                                        CompanyCode: cc.companyCode,
+                                        ProfitCenter: cc.profitCenter,
+                                        Department: cc.department,
+                                        BusinessArea: cc.businessArea
+                                };
 
-                                                NAME: cc.name || "",
-                                                DESCRIPTION: cc.description || "",
-                                                CURRENCY: cc.currency || "",
+                                console.log("PATCH URL:", url);
+                                console.log("PATCH Payload:", payload);
 
-                                                COSTCTR_HIER: cc.hierarchyArea || "",
-                                                PERSON_INCHARGE: cc.personResponsible || "",
-                                                COSTCENTERTYPE: cc.costCenterCategory || "",
-
-                                                COMPCODE: cc.companyCode || "",
-                                                PROFITCTR: cc.profitCenter || "",
-
-                                                USER_RESPONSIBLE: cc.userResponsible || "",
-                                                DEPARTMENT: cc.department || "",
-                                                BUSINESS_AREA: cc.businessArea || "",
-
-                                                LOCKACT_PRIMCOST: cc.actualPrimaryCosts ? "X" : "",
-                                                LOCKPLAN_PRIMCOST: cc.planPrimaryCosts ? "X" : "",
-                                                LOCKACT_SECCOST: cc.actualSecondaryCosts ? "X" : "",
-                                                LOCKPLAN_SECCOST: cc.planSecondaryCosts ? "X" : "",
-
-                                                LOCKACT_REVENUES: cc.actualRevenue ? "X" : "",
-                                                LOCKPLAN_REVENUES: cc.planRevenue ? "X" : "",
-
-                                                REC_QUANTITY: cc.recordQuantity ? "X" : "",
-                                                COMMIT_UPDATE: cc.commitmentUpdate ? "X" : ""
-                                        };
-
-                                        console.log("Update URI:", sKey);
-                                        console.log("Update Payload:", payload);
-
-                                        oModel.update(sKey, payload, {
-                                                method: "MERGE",  
-                                                success: function () {
-
-                                                        updatedCostCenters.push(cc.costCenter);
-
-                                                        completed++;
-                                                        if (completed === total) {
-                                                                resolve({
-                                                                        success: true,
-                                                                        updatedCostCenters
-                                                                });
-                                                        }
-                                                },
-                                                error: function (oError) {
-
-                                                        if (failed) return;
-                                                        failed = true;
-
-                                                        console.error("RAW UPDATE ERROR:", oError);
-
-                                                        let message = "Unknown backend error";
-
-                                                        try {
-                                                                const response = JSON.parse(oError.responseText);
-                                                                message =
-                                                                        response?.error?.message?.value ||
-                                                                        response?.error?.innererror?.errordetails?.[0]?.message ||
-                                                                        message;
-                                                        } catch (e) {
-                                                                if (oError.message) {
-                                                                        message = oError.message;
-                                                                }
-                                                        }
-
-                                                        reject({
-                                                                success: false,
-                                                                error: message
-                                                        });
-                                                }
-                                        });
+                                const res = await fetch(url, {
+                                        method: "PATCH",
+                                        headers: {
+                                                "Content-Type": "application/json",
+                                                "X-CSRF-Token": token,
+                                                "Accept": "application/json"
+                                        },
+                                        body: JSON.stringify(payload),
+                                        credentials: "include"
                                 });
-                        });
+
+                                if (!res.ok) {
+                                        const err = await res.text();
+                                        throw new Error(err);
+                                }
+
+                                updatedCostCenters.push(cc.costCenter);
+                        }
+
+                        return {
+                                success: true,
+                                updatedCostCenters
+                        };
                 },
 
                 _sendDataToSAP: async function () {

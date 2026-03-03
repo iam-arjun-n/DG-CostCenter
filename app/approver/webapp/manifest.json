@@ -39,6 +39,14 @@
           "odataVersion": "2.0",
           "annotations": []
         }
+      },
+      "UpdateCostCenterAPI": {
+        "uri": "/sap/opu/odata/sap/CE_COSTCENTER_0001/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "annotations": []
+        }
       }
     }
   },
@@ -98,6 +106,15 @@
       },
       "CreateCostCenterModel": {
         "dataSource": "CreateCostCenterAPI",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "UpdateCostCenterModel": {
+        "dataSource": "UpdateCostCenterAPI",
         "preload": true,
         "settings": {
           "operationMode": "Server",
