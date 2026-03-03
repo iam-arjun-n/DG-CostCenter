@@ -1594,12 +1594,28 @@ sap.ui.define([
         },
 
         validateName: function (oEvent) {
+
             const ctrl = oEvent.getSource();
             const val = ctrl.getValue().trim();
+
             this._clearMandatoryErrorIfFilled(ctrl);
 
+            // Alphabet only (no numbers, no spaces, no special chars)
+            const regex = /^[A-Za-z]+$/;
+
+            if (!regex.test(val)) {
+                this._updateFieldError(
+                    ctrl,
+                    "Name must contain only alphabets (A–Z)"
+                );
+                return;
+            }
+
             if (val.length > 20) {
-                this._updateFieldError(ctrl, "Name cannot exceed 20 characters");
+                this._updateFieldError(
+                    ctrl,
+                    "Name cannot exceed 20 characters"
+                );
                 return;
             }
 
