@@ -679,10 +679,27 @@ sap.ui.define([
             }
         },
 
+        _showProcessing: function (text) {
 
+            if (!this._processingDialog) {
+                this._processingDialog = new sap.m.BusyDialog({
+                    text: text || "Processing..."
+                });
+            }
+
+            this._processingDialog.setText(text || "Processing...");
+            this._processingDialog.open();
+        },
+
+        _hideProcessing: function () {
+            if (this._processingDialog) {
+                this._processingDialog.close();
+            }
+        },
 
         initiateApprovalProcess: async function () {
             try {
+                this._showProcessing("Submitting request...");
                 const oView = this.getView();
                 const oDraftModel = oView.getModel("DraftModel");
                 const oDraft = oDraftModel.getData();
@@ -773,7 +790,7 @@ sap.ui.define([
                 }
 
                 MessageToast.show("Request submitted successfully");
-
+                this._hideProcessing();
                 sap.ui.core.UIComponent
                     .getRouterFor(this)
                     .navTo("RouteOverview");
@@ -789,6 +806,7 @@ sap.ui.define([
         //Draft Function
         onDraftPress: async function () {
             try {
+                this._showProcessing("Saving draft...");
                 const oView = this.getView();
                 const oDraftModel = oView.getModel("DraftModel");
                 const oDraft = oDraftModel.getData();
@@ -852,7 +870,7 @@ sap.ui.define([
                 }
 
                 MessageToast.show("Draft saved successfully");
-
+                this._hideProcessing();
                 sap.ui.core.UIComponent
                     .getRouterFor(this)
                     .navTo("RouteOverview");

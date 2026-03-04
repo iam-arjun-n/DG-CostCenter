@@ -275,6 +275,7 @@ ${JSON.stringify({
 
                 //Approve or Reject Logic
                 _createCostCentersInS4: function (costCenters) {
+
                         const oModel = this.getModel("CreateCostCenterModel");
 
                         function format(dateStr) {
@@ -283,18 +284,22 @@ ${JSON.stringify({
                         }
 
                         return new Promise((resolve, reject) => {
+
                                 let completed = 0;
                                 const total = costCenters.length;
                                 let failed = false;
 
+                                const createdCostCenters = [];
+
                                 costCenters.forEach(cc => {
-                                        if (failed) {
-                                                return;
-                                        }
+
+                                        if (failed) return;
 
                                         const payload = {
+
                                                 COAREA: cc.controllingArea || "",
                                                 COSTCENTER: cc.costCenter || "",
+
                                                 VALIDFROM: format(cc.validFrom),
                                                 VALIDTO: "99991231",
 
@@ -325,36 +330,37 @@ ${JSON.stringify({
                                                 COMMIT_UPDATE: cc.commitmentUpdate ? "X" : ""
                                         };
 
-                                        console.log("Payload for S/4 Create:", payload);
+                                        console.log("Create Payload:", payload);
 
                                         oModel.create("/ETY_COSTCREATESet", payload, {
+
                                                 success: (oData) => {
-                                                        // oData contains created entity
+
                                                         if (oData?.COSTCENTER) {
                                                                 createdCostCenters.push(oData.COSTCENTER);
                                                         }
 
                                                         completed++;
+
                                                         if (completed === total) {
+
                                                                 resolve({
                                                                         success: true,
                                                                         createdCostCenters
                                                                 });
+
                                                         }
                                                 },
 
                                                 error: (oError) => {
-                                                        if (failed) {
-                                                                return;
-                                                        }
-                                                        failed = true;
 
-                                                        console.error("RAW ERROR OBJECT:", oError);
+                                                        if (failed) return;
+                                                        failed = true;
 
                                                         let message = "Unknown backend error";
 
                                                         try {
-                                                                // SAP Gateway standard error format
+
                                                                 const response = JSON.parse(oError.responseText);
 
                                                                 message =
@@ -363,22 +369,28 @@ ${JSON.stringify({
                                                                         message;
 
                                                         } catch (e) {
-                                                                // fallback to UI5 message if JSON parsing fails
+
                                                                 if (oError.message) {
                                                                         message = oError.message;
                                                                 }
+
                                                         }
 
                                                         reject({
                                                                 success: false,
-                                                                error: message,
+                                                                error: message
                                                         });
+
                                                 }
 
                                         });
+
                                 });
+
                         });
+
                 },
+
                 _fetchS4Csrf: async function (baseUrl) {
 
                         const res = await fetch(baseUrl, {
@@ -392,65 +404,124 @@ ${JSON.stringify({
                         return res.headers.get("X-CSRF-Token");
                 },
 
-                _updateCostCentersInS4: async function (costCenters) {
+                _updateCostCentersInS4: function (costCenters) {
 
-                        const baseUrl = this.getModel("UpdateCostCenterModel").sServiceUrl;
-                        const token = await this._fetchS4Csrf(baseUrl);
+                        const oModel = this.getModel("UpdateCostCenterModel");
 
-                        const updatedCostCenters = [];
-
-                        function formatDateForKey(dateStr) {
+                        function format(dateStr) {
                                 const d = new Date(dateStr);
-                                return d.toISOString().split(".")[0];
+                                return d.toISOString().slice(0, 10).replace(/-/g, "");
                         }
 
-                        for (let cc of costCenters) {
+                        return new Promise((resolve, reject) => {
 
-                                const validityEnd = formatDateForKey("9999-12-31");
+                                let completed = 0;
+                                const total = costCenters.length;
+                                let failed = false;
 
-                                const url = `${baseUrl}A_CostCenter_2(` +
-                                        `ControllingArea='${cc.controllingArea}',` +
-                                        `CostCenter='${cc.costCenter}',` +
-                                        `ValidityEndDate=datetime'${validityEnd}'` +
-                                        `)`;
+                                const updatedCostCenters = [];
 
-                                const payload = {
-                                        CostCenterName: cc.name,
-                                        CostCenterDescription: cc.description,
-                                        CompanyCode: cc.companyCode,
-                                        ProfitCenter: cc.profitCenter,
-                                        Department: cc.department,
-                                        BusinessArea: cc.businessArea
-                                };
+                                costCenters.forEach(cc => {
 
-                                console.log("PATCH URL:", url);
-                                console.log("PATCH Payload:", payload);
+                                        if (failed) return;
 
-                                const res = await fetch(url, {
-                                        method: "PATCH",
-                                        headers: {
-                                                "Content-Type": "application/json",
-                                                "X-CSRF-Token": token,
-                                                "Accept": "application/json"
-                                        },
-                                        body: JSON.stringify(payload),
-                                        credentials: "include"
+                                        const payload = {
+
+                                                COAREA: cc.controllingArea || "",
+                                                COSTCENTER: cc.costCenter || "",
+
+                                                VALIDFROM: format(cc.validFrom),
+                                                VALIDTO: "99991231",
+
+                                                NAME: cc.name || "",
+                                                DESCRIPTION: cc.description || "",
+                                                CURRENCY: cc.currency || "",
+
+                                                COSTCTR_HIER: cc.hierarchyArea || "",
+                                                PERSON_INCHARGE: cc.personResponsible || "",
+                                                COSTCENTERTYPE: cc.costCenterCategory || "",
+
+                                                COMPCODE: cc.companyCode || "",
+                                                PROFITCTR: cc.profitCenter || "",
+
+                                                USER_RESPONSIBLE: cc.userResponsible || "",
+                                                DEPARTMENT: cc.department || "",
+
+                                                // ❗ BUSINESS_AREA removed (causes KS/070)
+
+                                                LOCKACT_PRIMCOST: cc.actualPrimaryCosts ? "X" : "",
+                                                LOCKPLAN_PRIMCOST: cc.planPrimaryCosts ? "X" : "",
+                                                LOCKACT_SECCOST: cc.actualSecondaryCosts ? "X" : "",
+                                                LOCKPLAN_SECCOST: cc.planSecondaryCosts ? "X" : "",
+
+                                                LOCKACT_REVENUES: cc.actualRevenue ? "X" : "",
+                                                LOCKPLAN_REVENUES: cc.planRevenue ? "X" : "",
+
+                                                REC_QUANTITY: cc.recordQuantity ? "X" : "",
+                                                COMMIT_UPDATE: cc.commitmentUpdate ? "X" : ""
+                                        };
+
+                                        console.log("Update Payload:", payload);
+
+                                        oModel.create("/ETY_COSTCHANGESet", payload, {
+
+                                                method: "POST",
+
+                                                success: function () {
+
+                                                        updatedCostCenters.push(cc.costCenter);
+
+                                                        completed++;
+
+                                                        if (completed === total) {
+
+                                                                resolve({
+                                                                        success: true,
+                                                                        updatedCostCenters
+                                                                });
+
+                                                        }
+
+                                                },
+
+                                                error: function (oError) {
+
+                                                        if (failed) return;
+                                                        failed = true;
+
+                                                        let message = "Unknown backend error";
+
+                                                        try {
+
+                                                                const response = JSON.parse(oError.responseText);
+
+                                                                message =
+                                                                        response?.error?.message?.value ||
+                                                                        response?.error?.innererror?.errordetails?.[0]?.message ||
+                                                                        message;
+
+                                                        } catch (e) {
+
+                                                                if (oError.message) {
+                                                                        message = oError.message;
+                                                                }
+
+                                                        }
+
+                                                        reject({
+                                                                success: false,
+                                                                error: message
+                                                        });
+
+                                                }
+
+                                        });
+
                                 });
 
-                                if (!res.ok) {
-                                        const err = await res.text();
-                                        throw new Error(err);
-                                }
+                        });
 
-                                updatedCostCenters.push(cc.costCenter);
-                        }
-
-                        return {
-                                success: true,
-                                updatedCostCenters
-                        };
                 },
-
                 _sendDataToSAP: async function () {
 
                         const view = this._getMainView();
@@ -567,7 +638,60 @@ ${JSON.stringify({
                         }
                 },
 
+                _showProcessing: function () {
 
+                        if (!this._processingDialog) {
+                                this._processingDialog = new sap.m.BusyDialog({
+                                        text: "Processing request..."
+                                });
+                        }
+
+                        this._processingDialog.open();
+                },
+
+                _hideProcessing: function () {
+                        if (this._processingDialog) {
+                                this._processingDialog.close();
+                        }
+                },
+
+                _showResultDialog: function (type, message) {
+
+                        const state =
+                                type === "success" ? "Success" :
+                                        type === "error" ? "Error" :
+                                                "Warning";
+
+                        const dialog = new sap.m.Dialog({
+                                title: type === "success" ? "Success" : "Error",
+                                type: "Message",
+                                state: state,
+                                content: [
+                                        new sap.m.VBox({
+                                                width: "100%",
+                                                alignItems: "Center",
+                                                justifyContent: "Center",
+                                                items: [
+                                                        new sap.m.Text({
+                                                                text: message,
+                                                                textAlign: "Center",
+                                                                wrapping: true
+                                                        })
+                                                ]
+                                        })
+                                ],
+                                beginButton: new sap.m.Button({
+                                        text: "Close",
+                                        press: () => {
+                                                dialog.close();
+                                                dialog.destroy();
+                                                this._refreshInbox();
+                                        }
+                                })
+                        });
+
+                        dialog.open();
+                },
 
                 _onApprove: async function () {
                         const view = this._getMainView();
@@ -577,37 +701,60 @@ ${JSON.stringify({
                                 MessageBox.information("Please add a comment before approving.");
                                 return;
                         }
+                        this._showProcessing();
 
                         try {
-                                // 1. Send to SAP
-                                const result = await this._sendDataToSAP();   // { success, error }
-
-                                // 2. Update CAP (Approved / Error)
-                                await this._updateRequestAfterSAP(result);
-
-                                // 3. Save comments
-                                await this._addApproveComment();
-
-                                // 4. Complete workflow
-                                await this._completeWorkflowTask();
-
+                                const result = await this._sendDataToSAP();
+                                this._hideProcessing();
                                 if (!result.success) {
-                                        MessageBox.error(
-                                                `SAP Posting Failed:\n${result.error}`,
-                                                { title: "Posting Error" }
+
+                                        this._showResultDialog(
+                                                "error",
+                                                `SAP Posting Failed:\n${result.error}`
                                         );
+
                                         return;
                                 }
 
-                                MessageBox.success("Request approved.");
-                                this._refreshInbox();
+                                await this._updateRequestAfterSAP(result);
+                                await this._addApproveComment();
+                                await this._completeWorkflowTask();
+
+                                const mainModel = view.getModel();
+                                const reqType = mainModel.getProperty("/RequestType");
+
+                                let list = "";
+                                let message = "";
+
+                                if (reqType === "Create") {
+
+                                        list = result.createdCostCenters?.join(", ") || "";
+
+                                        message = `${list} Cost Center(s) Created Successfully`;
+
+                                } else if (reqType === "Change" || reqType === "Extend") {
+
+                                        list = result.updatedCostCenters?.join(", ") || "";
+
+                                        message = `${list} Cost Center(s) Updated Successfully`;
+
+                                }
+
+                                this._showResultDialog("success", message);
 
                         } catch (e) {
-                                MessageBox.error(e.message || "Approve failed");
+
+                                this._hideProcessing();
+
+                                this._showResultDialog(
+                                        "error",
+                                        e.message || "Approve failed"
+                                );
                         }
                 },
 
                 _onReject: async function () {
+
                         const view = this._getMainView();
                         const comments = view.getModel("commentModel")?.getData() ?? [];
 
@@ -616,21 +763,29 @@ ${JSON.stringify({
                                 return;
                         }
 
+                        this._showProcessing();
+
                         try {
-                                // 1. Update CAP (Rejected)
+
                                 await this._updateRequestStatus("Rejected", "Rejected");
-
-                                // 2. Save comments
                                 await this._addApproveComment();
-
-                                // 3. Complete workflow
                                 await this._completeWorkflowTask();
 
-                                MessageBox.error("Request rejected.");
-                                this._refreshInbox();
+                                this._hideProcessing();
+
+                                this._showResultDialog(
+                                        "success",
+                                        `${this._reqId} Rejected`
+                                );
 
                         } catch (e) {
-                                MessageBox.error(e.message || "Reject failed");
+
+                                this._hideProcessing();
+
+                                this._showResultDialog(
+                                        "error",
+                                        e.message || "Reject failed"
+                                );
                         }
                 },
 

@@ -41,7 +41,7 @@
         }
       },
       "UpdateCostCenterAPI": {
-        "uri": "/sap/opu/odata/sap/CE_COSTCENTER_0001/",
+        "uri": "/sap/opu/odata/sap/ZMDM_COSTCENTER_SRV/",
         "type": "OData",
         "settings": {
           "odataVersion": "2.0",
