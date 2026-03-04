@@ -203,6 +203,7 @@ sap.ui.define([
                                 startup.taskModel.getData().InstanceID
                         );
                 },
+
                 async _fetchCAPCsrf() {
                         const base = this._getDatabaseBaseURL();
                         const res = await fetch(base, {
@@ -655,42 +656,32 @@ ${JSON.stringify({
                         }
                 },
 
-                _showResultDialog: function (type, message) {
+                _openResultDialog: function (title, message, state) {
 
-                        const state =
-                                type === "success" ? "Success" :
-                                        type === "error" ? "Error" :
-                                                "Warning";
+                        if (!this._resultDialog) {
+                                this._resultDialog = sap.ui.xmlfragment(
+                                        "com.deloitte.mdg.costcenter.approver.approver.fragment.ResultDialog",
+                                        this
+                                );
+                                this.getRootControl().addDependent(this._resultDialog);
+                        }
 
-                        const dialog = new sap.m.Dialog({
-                                title: type === "success" ? "Success" : "Error",
-                                type: "Message",
-                                state: state,
-                                content: [
-                                        new sap.m.VBox({
-                                                width: "100%",
-                                                alignItems: "Center",
-                                                justifyContent: "Center",
-                                                items: [
-                                                        new sap.m.Text({
-                                                                text: message,
-                                                                textAlign: "Center",
-                                                                wrapping: true
-                                                        })
-                                                ]
-                                        })
-                                ],
-                                beginButton: new sap.m.Button({
-                                        text: "Close",
-                                        press: () => {
-                                                dialog.close();
-                                                dialog.destroy();
-                                                this._refreshInbox();
-                                        }
-                                })
+                        const oModel = new sap.ui.model.json.JSONModel({
+                                title,
+                                message,
+                                state
                         });
 
-                        dialog.open();
+                        this._resultDialog.setModel(oModel, "result");
+                        this._resultDialog.open();
+                },
+
+                onResultDialogClose: function () {
+
+                        if (this._resultDialog) {
+                                this._resultDialog.close();
+                        }
+                        window.location.reload();
                 },
 
                 _onApprove: async function () {
@@ -708,12 +699,11 @@ ${JSON.stringify({
                                 this._hideProcessing();
                                 if (!result.success) {
 
-                                        this._showResultDialog(
-                                                "error",
-                                                `SAP Posting Failed:\n${result.error}`
+                                        this._openResultDialog(
+                                                "Posting Failed",
+                                                result.error,
+                                                "Error"
                                         );
-
-                                        return;
                                 }
 
                                 await this._updateRequestAfterSAP(result);
@@ -740,16 +730,17 @@ ${JSON.stringify({
 
                                 }
 
-                                this._showResultDialog("success", message);
+                                this._openResultDialog("Success", message, "Success");
 
                         } catch (e) {
 
                                 this._hideProcessing();
-
-                                this._showResultDialog(
-                                        "error",
-                                        e.message || "Approve failed"
+                                this._openResultDialog(
+                                        "Posting Failed",
+                                        e.message || "Approve failed",
+                                        "Error"
                                 );
+
                         }
                 },
 
@@ -773,19 +764,22 @@ ${JSON.stringify({
 
                                 this._hideProcessing();
 
-                                this._showResultDialog(
-                                        "success",
-                                        `${this._reqId} Rejected`
+                                this._openResultDialog(
+                                        "Rejected",
+                                        `${this._reqId} Rejected`,
+                                        "Warning"
                                 );
 
                         } catch (e) {
 
                                 this._hideProcessing();
 
-                                this._showResultDialog(
-                                        "error",
-                                        e.message || "Reject failed"
+                                this._openResultDialog(
+                                        "Posting Failed",
+                                        e.message || "Approve failed",
+                                        "Error"
                                 );
+
                         }
                 },
 
