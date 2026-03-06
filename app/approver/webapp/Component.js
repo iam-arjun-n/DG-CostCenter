@@ -704,6 +704,7 @@ ${JSON.stringify({
                                                 result.error,
                                                 "Error"
                                         );
+                                        return;
                                 }
 
                                 await this._updateRequestAfterSAP(result);
