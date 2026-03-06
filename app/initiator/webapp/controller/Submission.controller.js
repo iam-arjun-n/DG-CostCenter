@@ -161,6 +161,7 @@ sap.ui.define([
         },
 
         _onSAPDataLoaded: function (oData) {
+            console.log(oData);
             var oText = oData.to_Text && oData.to_Text.results && oData.to_Text.results[0] || {};
 
             var formatted = [{
