@@ -66,8 +66,8 @@
 			"priority": "MEDIUM",
 			"isHiddenInLogForParticipant": false,
 			"supportsForward": false,
-			"userInterface": "sapui5://8753c3e6-0194-44ff-bcbf-1ccdd360325f.DG-CostCenter.comdeloittemdgcostcenterapproverapprover/com.deloitte.mdg.costcenter.approver.approver",
-			"recipientGroups": "CostCenterApproval",
+			"userInterface": "sapui5://e71d911d-d437-4748-bee8-95a799765be0.DG-CostCenter.comdeloittemdgcostcenterapproverapprover/com.deloitte.mdg.costcenter.approver.approver",
+			"recipientGroups": "DataGuardian_Tiles",
 			"id": "usertask1",
 			"name": "Cost Center Approver"
 		},
